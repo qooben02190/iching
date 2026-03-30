@@ -116,7 +116,7 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .nav-back:hover{color:var(--ink);}
 .nav-back::before{content:'←';font-size:.85rem;}
 .nav-title{font-size:.72rem;letter-spacing:.35em;color:var(--muted);}
-.s3-body{width:100%;max-width:900px;margin:0 auto;padding:2rem 1.5rem calc(5rem + env(safe-area-inset-bottom));}
+.s3-body{width:100%;max-width:1100px;margin:0 auto;padding:2rem 1.5rem calc(5rem + env(safe-area-inset-bottom));}
 
 /* Spread intro */
 .spread-intro{text-align:center;margin-bottom:2.4rem;padding-bottom:1.8rem;border-bottom:1px solid var(--border);}
@@ -149,12 +149,14 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .readings-wrap{
   display:grid;
   grid-template-columns:repeat(var(--card-count,1),1fr);
-  gap:2rem;
+  gap:1.5rem;
   margin-bottom:2rem;
+  width:100%;
 }
-@media(max-width:600px){
+/* 手機版才換成單欄 */
+@media(max-width:700px){
   .readings-wrap{
-    grid-template-columns:1fr;
+    grid-template-columns:1fr !important;
   }
 }
 /* Card hero banner */
@@ -170,8 +172,8 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 }
 .cr-card-col{
   width:100%;
-  max-width:140px;
-  margin-bottom:1rem;
+  max-width:120px;
+  margin:0 auto 1rem;
 }
 .cr-card-img{
   width:100%;
@@ -190,11 +192,13 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .cr-pos-tag{font-size:.58rem;letter-spacing:.28em;color:var(--paper);background:var(--gold);padding:.1rem .5rem;display:inline-block;margin-bottom:.5rem;}
 .cr-name{font-size:1.15rem;font-weight:700;letter-spacing:.1em;display:block;margin-bottom:.2rem;}
 .cr-num{font-size:.6rem;letter-spacing:.2em;color:var(--muted);display:block;margin-bottom:.4rem;}
-/* 橫向並排時調整 section 字體 */
-.readings-wrap .cr-section-label{font-size:.55rem;letter-spacing:.2em;}
-.readings-wrap .cr-section-body{font-size:.95rem;}
-.readings-wrap .cr-decision{font-size:1rem;padding:1rem 1.1rem;}
-.readings-wrap .cr-actions li{font-size:.92rem;}
+/* 橫向並排時字體略小 */
+.readings-wrap .cr-section-label{font-size:.55rem;letter-spacing:.18em;}
+.readings-wrap .cr-section-body{font-size:.9rem;line-height:2.1;}
+.readings-wrap .cr-decision{font-size:.95rem;padding:.9rem 1rem;}
+.readings-wrap .cr-actions li{font-size:.88rem;}
+.readings-wrap .seen-block{font-size:.92rem;}
+.readings-wrap .cr-name{font-size:1rem;}
 .cr-nature-tag{font-size:.62rem;letter-spacing:.1em;color:var(--gold);display:block;margin-bottom:.5rem;}
 .cr-change-tag{font-size:.6rem;letter-spacing:.05em;color:var(--red);display:block;margin-top:.4rem;line-height:1.7;}
 .cr-soul-line{font-size:.78rem;font-style:italic;color:var(--muted);line-height:1.8;display:block;margin-bottom:.3rem;}
@@ -1703,7 +1707,7 @@ async function callAI(prompt,maxT){
         "anthropic-version":"2023-06-01",
         "anthropic-dangerous-direct-browser-access":"true"
       },
-      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxT||3500,system:SYS,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:maxT&&maxT<=1200?"claude-haiku-4-5-20251001":"claude-sonnet-4-20250514",max_tokens:maxT||2000,system:SYS,messages:[{role:"user",content:prompt}]})
     });
     if(!r.ok){
       const errText=await r.text();
@@ -1740,6 +1744,7 @@ async function fetchReadingsWithCards(q, spread, sr, drawn, isTwoChoice=false){
   const profile=profileState||{};
   try{
     const yaoChanges=drawn.map(h=>genYaoChange(h));
+    // readings 和 synth 同時計算（synth 只需要卦名，不需要 readings 內容）
     const readings=await Promise.all(drawn.map((h,i)=>{
       const role=spread.slots[i];
       const{movingYaos,changedHex}=yaoChanges[i];
@@ -1811,39 +1816,15 @@ ${hasChange?`━━ 爻變資料 ━━
 變卦卦辭：${changedHex.judgment}
 變卦象傳：${changedHex.image}`:'（本卦無動爻，為純卦，卦象穩定）'}
 
-━━ 請依照以下結構回答，這是你的思考骨架，不是要寫出來的標題 ━━
+━━ 結構（不要寫出標題，直接寫內容）━━
 
-【解讀邏輯——只供你內部思考，不要寫出來】
-在心裡先想清楚：
-- 這個問題屬於什麼類型
-- 這張卦的哪個核心特質最切中這個問題
-這個思考過程融入你的解讀裡，但不要當成一個段落寫出來。
+【你看到的那個人】第一句描述問者狀態，讓他說「對就是這樣」。格式：「我看到⋯⋯」或「卦象讓我看到⋯⋯」
 
-【你看到的那個人】
-最重要的第一句話——描述你在這個問題和卦象裡看到的那個人的狀態。
-說出他沒說出口、但心裡有的感受，讓他讀完說「對，就是這樣」。
-格式：「我看到一個⋯⋯的人」或「卦象讓我看到⋯⋯」
-接著確認：「我理解你真正在問的是⋯⋯」
-這張牌是問者親手選的，請在解讀中自然呼應這個選擇的意義。
+【圖像解析】用故事方式說牌卡畫面，不解釋，讓問者感受。
 
-【圖像解析】
-用說故事的方式描述牌卡畫面——景象、人物、氛圍。
-不要解釋，讓問者自己感受。
+【卦象解讀】用「卦象告訴我⋯⋯」描述核心精神，根據問題類型切換語氣。
 
-【卦象解讀】
-先判斷問題性質，用對應角色語氣說話。
-用「卦象告訴我⋯⋯」描述這個卦的核心精神。
-
-【能量參考——只供你內部理解，絕對不說出術語】
-此卦五行：${h.wuxing||''}，關係：${h.wxrel||''}
-方位與顏色資料已在上方提供，請根據問者的問題判斷是否需要給出方位或顏色建議：
-- 若問者問的是工作地點、搬家、方向選擇等有地理性的問題，自然融入方位建議，用生活語言說（不說卦名），例如：「卦象讓我感覺到往南方發展的能量比較順」
-- 若問者問的是顏色、穿著、環境佈置等，給出吉利顏色建議，說明為什麼這個顏色此刻對他有加持
-- 若問者的問題與方位無關，不需要強行加入方位
-把這些資訊完全翻譯成感受和畫面說出來，不說術語。
-時間感是卦象的一部分，自然融入解讀，只有當時機是最核心訊息時才特別點出來。
-${hasChange?`動爻：${movingYaoTexts}——翻譯成生活語言融入解讀，不說爻辭原文。`:''}
-必須說出警示面，用故事方式說，不引用術語。
+【能量內部參考（不說術語）】五行：${h.wuxing||''}。若問題涉及方位/顏色/時機，自然融入建議。必須說出警示面。${hasChange?`動爻：${movingYaoTexts}——翻譯成生活語言。`:''}
 
 【針對問者的處境】
 緊扣問者說的具體情境與關鍵詞：
@@ -1886,10 +1867,11 @@ ${hasChange?`【爻變說明——必須包含】
 - 變卦代表「如果順著這個能量走，最終會到達的狀態」
 用故事方式說：「現在是⋯⋯（本卦），因為⋯⋯（動爻），所以會走向⋯⋯（變卦）」
 不要說「爻變表示⋯⋯」，要說「這個變化讓我看到⋯⋯」`:''}`,
-        3500
+        2000
       );
     }));
 
+    // synthCards 只需要 drawn + yaoChanges，在 readings 跑完之後立刻計算
     const synthCards=drawn.map((h,i)=>{
       const yc=yaoChanges[i];
       let txt=`${spread.slots[i]}→${h.name}卦（${h.nature}）`;
@@ -1944,7 +1926,7 @@ ${spread.name==='天時・地利・人和'?`
 - 每個重點不超過兩句
 - 結尾必須有「這個卦說：」的明確答句
 - 語氣根據問題性質切換，不說套話`,
-      2000
+      1200
     );
 
     return{spread,sr,drawn,yaoChanges,readings,synth};
