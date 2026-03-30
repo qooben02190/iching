@@ -749,9 +749,10 @@ function saveApiKey(){
 }
 
 function showMainWithKey(){
-  // Update key indicator in s1
   const badge=document.getElementById('keyBadge');
   if(badge) badge.style.display='flex';
+  const notSet=document.getElementById('keyNotSet');
+  if(notSet) notSet.style.display='none';
   show('s1');
 }
 
@@ -767,6 +768,8 @@ window.addEventListener('DOMContentLoaded',()=>{
     APIKEY=key;
     const badge=document.getElementById('keyBadge');
     if(badge) badge.style.display='flex';
+    const notSet=document.getElementById('keyNotSet');
+    if(notSet) notSet.style.display='none';
   }
 });
 let currentMode='free'; // 'free' or 'two'
