@@ -470,8 +470,8 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
       </label>
     </div>
     <div style="margin-top:.8rem;text-align:center;">
-      <span id="keyBadge" style="display:none;font-size:.62rem;letter-spacing:.15em;color:var(--gold);border:1px solid rgba(139,115,64,.3);padding:.12rem .5rem;margin-right:.5rem;">API Key 已設定</span>
-      <button id="keyNotSet" onclick="show('s0')" style="background:none;border:none;font-family:'Noto Serif TC',serif;font-size:.65rem;letter-spacing:.15em;color:var(--red);cursor:pointer;text-decoration:underline;">⚙ 設定 API Key</button>
+      <span id="keyBadge" style="display:none;font-size:.62rem;letter-spacing:.15em;color:var(--gold);border:1px solid rgba(139,115,64,.3);padding:.12rem .5rem;margin-right:.5rem;">✅ API Key 已設定</span>
+      <button id="keyNotSet" onclick="show('s0')" style="background:none;border:none;font-family:'Noto Serif TC',serif;font-size:.65rem;letter-spacing:.15em;color:var(--red);cursor:pointer;text-decoration:underline;">⚙ 設定 API Key（尚未設定）</button>
     </div>
   </div>
 </div>
@@ -742,13 +742,20 @@ function loadApiKey(){
 
 function saveApiKey(){
   const key=document.getElementById('apiKeyInput').value.trim();
-  if(!key||!key.startsWith('sk-ant-')){
-    document.getElementById('apiKeyInput').style.borderColor='var(--red)';
-    document.getElementById('apiKeyInput').placeholder='格式應為 sk-ant-... 請確認';
+  const input=document.getElementById('apiKeyInput');
+  if(!key){
+    input.style.borderColor='var(--red)';
+    alert('請輸入 API Key');
+    return;
+  }
+  if(!key.startsWith('sk-ant-')){
+    input.style.borderColor='var(--red)';
+    alert('格式不對，API Key 應該是 sk-ant- 開頭');
     return;
   }
   APIKEY=key;
   try{ localStorage.setItem('iching_api_key',key); }catch(e){}
+  alert('✅ API Key 設定成功！現在可以開始占卜了。');
   showMainWithKey();
 }
 
