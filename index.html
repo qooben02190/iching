@@ -140,13 +140,58 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .card-hex-nat{display:none;}
 
 /* Reading blocks */
-.card-reading{margin-bottom:3rem;padding-bottom:2.6rem;border-bottom:1px solid var(--border);}
+.card-reading{
+  display:flex;
+  flex-direction:row;
+  gap:1.4rem;
+  margin-bottom:2.4rem;
+  padding-bottom:2.4rem;
+  border-bottom:1px solid var(--border);
+  align-items:flex-start;
+}
 .card-reading:last-of-type{border-bottom:none;}
-.cr-header{display:flex;align-items:baseline;gap:.8rem;margin-bottom:1.6rem;flex-wrap:wrap;}
-.cr-num{font-size:.68rem;letter-spacing:.22em;color:var(--red);}
-.cr-name{font-size:1.1rem;font-weight:700;letter-spacing:.15em;}
-.cr-nature{font-size:.7rem;letter-spacing:.12em;color:var(--gold);}
-.cr-pos{font-size:.68rem;letter-spacing:.2em;color:var(--muted);}
+.cr-card-col{
+  width:110px;
+  min-width:110px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.5rem;
+  position:sticky;
+  top:70px;
+}
+.cr-card-img{
+  width:110px;
+  height:165px;
+  object-fit:cover;
+  border-radius:2px;
+  box-shadow:0 4px 16px rgba(26,22,20,.18);
+  display:block;
+}
+.cr-card-img-placeholder{
+  width:110px;
+  height:165px;
+  background:var(--ink);
+  border-radius:2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:rgba(245,240,232,.2);
+  font-size:1.5rem;
+}
+.cr-card-info{text-align:center;}
+.cr-change-tag{font-size:.58rem;letter-spacing:.08em;color:var(--red);margin-top:.3rem;line-height:1.6;}
+.cr-content-col{flex:1;min-width:0;}
+.cr-header{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1.2rem;}
+.cr-num{font-size:.6rem;letter-spacing:.22em;color:var(--red);}
+.cr-name{font-size:1rem;font-weight:700;letter-spacing:.12em;}
+.cr-nature{font-size:.65rem;letter-spacing:.1em;color:var(--gold);}
+.cr-pos{font-size:.63rem;letter-spacing:.18em;color:var(--muted);}
+@media(max-width:480px){
+  .card-reading{flex-direction:column;}
+  .cr-card-col{width:100%;flex-direction:row;align-items:flex-start;gap:1rem;position:static;}
+  .cr-card-img,.cr-card-img-placeholder{width:80px;height:120px;min-width:80px;}
+}
 .tag{display:inline-block;font-size:.6rem;letter-spacing:.28em;color:var(--paper);padding:.13rem .52rem;margin-bottom:.55rem;margin-right:.3rem;}
 .tg-img{background:#5a4a2a;}
 .tg-plain{background:var(--red);}
@@ -167,22 +212,60 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .s2-sub{font-size:.82rem;letter-spacing:.15em;color:var(--muted);margin-bottom:.5rem;min-height:1.5em;transition:all .3s;}
 .s2-count{color:var(--red);font-weight:700;}
 .s2-hint{font-size:.68rem;letter-spacing:.1em;color:rgba(107,96,88,.5);font-style:italic;line-height:1.8;}
-.cards-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;width:100%;max-width:500px;margin-bottom:2rem;}
-@media(min-width:540px){.cards-select-grid{grid-template-columns:repeat(6,1fr);max-width:680px;}}
-.card-select-item{aspect-ratio:2/3;cursor:pointer;position:relative;border-radius:2px;perspective:600px;}
-.card-select-item:hover:not(.flipped){transform:translateY(-4px);}
-.card-select-item:active{transform:scale(.97);}
+.cards-select-grid{
+  position:relative;
+  width:100%;
+  max-width:100%;
+  height:220px;
+  margin-bottom:3rem;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+.card-select-item{
+  width:52px;
+  height:80px;
+  cursor:pointer;
+  position:absolute;
+  bottom:0;
+  border-radius:3px;
+  perspective:800px;
+  transition:transform .3s ease;
+  transform-origin:bottom center;
+}
+.card-select-item:hover:not(.selected){
+  filter:brightness(1.1);
+  z-index:50 !important;
+}
+.card-select-item.selected{
+  z-index:30;
+}
 .card-flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);}
 .card-select-item.flipped .card-flip-inner{transform:rotateY(180deg);}
-.card-select-back{width:100%;height:100%;background:linear-gradient(160deg,#1a1614 60%,#2a2018);display:flex;align-items:center;justify-content:center;position:absolute;inset:0;border:1px solid rgba(139,115,64,.3);backface-visibility:hidden;border-radius:2px;}
-.card-back-inner{display:flex;flex-direction:column;align-items:center;gap:.3rem;padding:.4rem;}
-.card-back-line{width:70%;height:1px;background:rgba(139,115,64,.35);}
-.card-back-symbol{color:rgba(139,115,64,.45);font-size:1.1rem;}
+.card-select-back{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:absolute;inset:0;backface-visibility:hidden;border-radius:2px;overflow:hidden;}
+.card-select-back img{width:100%;height:100%;object-fit:cover;display:block;}
+.card-back-inner{display:none;}
+.card-back-line{display:none;}
+.card-back-symbol{display:none;}
 .card-select-front-wrap{width:100%;height:100%;position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);border-radius:2px;overflow:hidden;}
 .card-select-front{width:100%;height:100%;object-fit:cover;display:block;}
 .card-select-item.selected .card-select-front-wrap{outline:2px solid var(--red);box-shadow:0 0 12px rgba(192,57,43,.5);}
 .card-select-item.selected::after{content:'✓';position:absolute;top:4px;right:5px;font-size:.65rem;color:var(--red);background:rgba(245,240,232,.9);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;line-height:16px;text-align:center;z-index:10;}
 @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.card-lightbox{
+  position:fixed;inset:0;background:rgba(26,22,20,.85);z-index:999;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);animation:fi .2s ease;
+}
+.clb-inner{
+  background:var(--paper);padding:1.5rem;max-width:280px;width:90%;
+  text-align:center;border:1px solid var(--border);
+}
+.clb-inner img{width:100%;max-height:380px;object-fit:contain;display:block;margin-bottom:1rem;}
+.clb-name{font-size:1rem;font-weight:700;letter-spacing:.15em;margin-bottom:.4rem;}
+.clb-soul{font-size:.78rem;color:var(--muted);font-style:italic;margin-bottom:1rem;line-height:1.7;}
+.clb-close{font-size:.65rem;letter-spacing:.28em;color:var(--muted);cursor:pointer;border:1px solid var(--border);padding:.3rem .8rem;display:inline-block;}
+.clb-close:hover{color:var(--red);border-color:var(--red);}
 .card-reveal-name{font-family:"Noto Serif TC",serif;font-size:.55rem;letter-spacing:.08em;color:var(--muted);text-align:center;margin-top:.2rem;line-height:1.4;}
 .card-select-item.shake{animation:shake .3s ease;}
 .s2-confirm-btn{background:var(--ink);border:none;font-family:'Noto Serif TC',serif;font-size:.8rem;letter-spacing:.28em;color:var(--paper);padding:.8rem 2.8rem;cursor:pointer;transition:all .25s;margin-top:.8rem;position:relative;}
@@ -942,26 +1025,46 @@ async function begin(q){
 function initCardGrid(){
   const grid=document.getElementById('cardsSelectGrid');
   if(!grid) return;
-  const ids=[...Array(64)].map((_,i)=>i+1).sort(()=>Math.random()-.5).slice(0,24);
-  grid.innerHTML=ids.map(id=>{
+  const ids=[...Array(64)].map((_,i)=>i+1).sort(()=>Math.random()-.5).slice(0,32);
+  const total=ids.length;
+  const maxAngle=42; // half-span degrees
+  const gridW=grid.offsetWidth||360;
+  const cardW=52;
+  const centerX=gridW/2;
+
+  grid.innerHTML=ids.map((id,idx)=>{
     const hex=HEX.find(h=>h.id===id);
     const name=hex?hex.name:'';
     const fullname=hex?(hex.fullname||name+'卦'):name+'卦';
+
+    // Fan: evenly spread angles from -maxAngle to +maxAngle
+    const angle=-maxAngle + (idx/(total-1))*(maxAngle*2);
+    const rad=angle*(Math.PI/180);
+    // Position: spread along bottom arc
+    const spread=Math.min(gridW*0.9, total*22);
+    const x=-spread/2 + (idx/(total-1))*spread;
+    // Y offset: cards at edges drop down (arc effect)
+    const arcDrop=Math.abs(angle/maxAngle)*30;
+
+    const style=`
+      left:calc(50% + ${x}px - ${cardW/2}px);
+      bottom:${-arcDrop}px;
+      transform:rotate(${angle}deg);
+      z-index:${idx};
+    `;
+
     return `
-    <div class="card-select-item" id="csi-${id}" onclick="selectCard(${id})">
+    <div class="card-select-item" id="csi-${id}" onclick="selectCard(${id})"
+      data-angle="${angle}" data-x="${x}" data-arc="${arcDrop}" style="${style}">
       <div class="card-flip-inner">
         <div class="card-select-back">
-          <div class="card-back-inner">
-            <div class="card-back-line"></div>
-            <div class="card-back-symbol">☯</div>
-            <div class="card-back-line"></div>
-          </div>
+          <img src="card-back.jpg" alt="牌背" onerror="this.parentElement.style.background='#8b1a1a'">
         </div>
         <div class="card-select-front-wrap" id="rev-${id}">
-          <img class="card-select-front" src="${id}.png" alt="${fullname}" onerror="this.style.display='none'">
+          <img class="card-select-front" src="${id}.png" alt="${fullname}"
+            onerror="this.parentElement.style.background='var(--ink)';this.style.display='none'">
         </div>
       </div>
-      <div class="card-reveal-name" id="rname-${id}" style="display:none;">第${id}卦・${name}</div>
     </div>`;
   }).join('');
 }
@@ -969,30 +1072,61 @@ function initCardGrid(){
 function selectCard(id){
   const el=document.getElementById('csi-'+id);
   if(!el) return;
-  const nameEl=document.getElementById('rname-'+id);
+
+  // If already selected and locked, show lightbox instead
   if(el.classList.contains('selected')){
-    el.classList.remove('selected','flipped');
-    if(nameEl) nameEl.style.display='none';
-    selectedCardIds=selectedCardIds.filter(x=>x!==id);
-  }else{
-    if(selectedCardIds.length>=neededCount){
-      el.classList.add('shake');
-      setTimeout(()=>el.classList.remove('shake'),400);
-      return;
-    }
-    el.classList.add('selected','flipped');
-    setTimeout(()=>{if(nameEl) nameEl.style.display='block';},400);
-    selectedCardIds.push(id);
+    showCardLightbox(id);
+    return;
   }
+
+  // Check limit
+  if(selectedCardIds.length>=neededCount){
+    el.classList.add('shake');
+    setTimeout(()=>el.classList.remove('shake'),400);
+    return;
+  }
+
+  // Get arc data
+  const angle=parseFloat(el.dataset.angle)||0;
+  const arcDrop=parseFloat(el.dataset.arc)||0;
+
+  // Flip and lift
+  el.classList.add('selected','flipped');
+  el.style.bottom=(40-arcDrop)+'px';
+  el.style.transform=`rotate(${angle*0.3}deg) scale(1.08)`;
+  el.style.zIndex=100+selectedCardIds.length;
+
+  selectedCardIds.push(id);
+
   const btn=document.getElementById('s2ConfirmBtn');
   const remaining=neededCount-selectedCardIds.length;
   if(selectedCardIds.length===neededCount){
     if(btn) btn.style.display='block';
-    document.getElementById('s2Sub').innerHTML=`<span style="color:var(--gold)">已選好 ${neededCount} 張，可以開始了</span>`;
+    document.getElementById('s2Sub').innerHTML=`<span style="color:var(--gold)">✓ 已選好 ${neededCount} 張</span>`;
   }else{
     if(btn) btn.style.display='none';
     document.getElementById('s2Sub').innerHTML=`還需選 <span class="s2-count">${remaining}</span> 張`;
   }
+}
+
+function showCardLightbox(id){
+  const hex=HEX.find(h=>h.id===id);
+  if(!hex) return;
+  const existing=document.getElementById('cardLightbox');
+  if(existing) existing.remove();
+  const lb=document.createElement('div');
+  lb.id='cardLightbox';
+  lb.className='card-lightbox';
+  lb.onclick=()=>lb.remove();
+  lb.innerHTML=`
+    <div class="clb-inner" onclick="event.stopPropagation()">
+      <img src="${id}.png" alt="${hex.fullname||hex.name+'卦'}"
+        onerror="this.style.display='none'">
+      <div class="clb-name">${hex.fullname||hex.name+'卦'}</div>
+      <div class="clb-soul">${hex.soul||''}</div>
+      <div class="clb-close" onclick="document.getElementById('cardLightbox').remove()">關閉</div>
+    </div>`;
+  document.body.appendChild(lb);
 }
 
 async function confirmCards(){
@@ -1634,21 +1768,29 @@ function buildResult(data){
     const decisionTxt=parseSection(raw,'這個卦說');
     const actTxt=parseSection(raw,'可以做的事')||parseSection(raw,'具體行動建議');
 
+    // Left col: card image + basic info
+    // Right col: all reading content
     h+=`<div class="card-reading">
-      <div class="cr-header">
-        <span class="cr-num">第 ${hx.id} 卦</span>
-        <span class="cr-name">${hx.fullname||hx.name+'卦'}</span>
-        <span class="cr-nature">${hx.nature}</span>
-        <span class="cr-pos">${spread.slots[i]}</span>
-      </div>`;
+      <div class="cr-card-col">
+        <img class="cr-card-img" src="${hx.id}.png" alt="${hx.fullname||hx.name}"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="cr-card-img-placeholder" style="display:none;">☯</div>
+        <div class="cr-card-info">
+          <div class="cr-name">${hx.fullname||hx.name+'卦'}</div>
+          <div class="cr-num">第 ${hx.id} 卦</div>
+          <div class="cr-pos">${spread.slots[i]}</div>
+          ${yc&&yc.changedHex?`<div class="cr-change-tag">↓ ${yc.changedHex.fullname||yc.changedHex.name+'卦'}</div>`:''}
+        </div>
+      </div>
+      <div class="cr-content-col">`;
+
     if(seenTxt){h+=`<div class="seen-block">${seenTxt.replace(/\n/g,'<br>')}</div>`;}
 
-    // Moving yaos display
     if(hasChange){
       h+=`<div class="moving-yaos-block">
         <span class="my-label">動爻（天機所在）</span>
         ${yc.movingYaos.map(yi=>`<div class="my-item">${hx.yaoci[yi]}</div>`).join('')}
-        <div class="my-arrow">↓ 變為第 ${yc.changedHex.id} 卦「${yc.changedHex.name}卦」　${yc.changedHex.nature}</div>
+        <div class="my-arrow">↓ 變為「${yc.changedHex.fullname||yc.changedHex.name+'卦'}」</div>
       </div>`;
     }
 
@@ -1658,12 +1800,8 @@ function buildResult(data){
     if(qTxt){h+=`<div><span class="tag tg-advice">對你說的話</span></div><div class="rtext">${qTxt.replace(/\n/g,'<br>')}</div>`;}
     if(decisionTxt){h+=`<div class="decision-block">${decisionTxt.replace(/\n/g,'<br>')}</div>`;}
     if(actTxt){h+=`<div><span class="tag tg-advice">可以做的事</span></div><div class="rtext">${actTxt.replace(/\n/g,'<br>')}</div>`;}
-    h+=`<div style="margin-top:1.2rem;">
-      <span class="tag tg-classic">卦　辭</span>
-      <div class="rtext classic">${hx.judgment}</div>
-      <span class="tag tg-classic">象　傳</span>
-      <div class="rtext classic">${hx.image}</div>
-    </div></div>`;
+
+    h+=`</div></div>`;
   });
 
   // Follow-up question box
