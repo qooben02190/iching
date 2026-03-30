@@ -273,7 +273,7 @@ details[open] .cr-judgment-summary::after{content:'－';}
   perspective:600px;
   -webkit-perspective:600px;
   transform-origin:bottom center;
-  transition:transform .3s cubic-bezier(.23,1,.32,1);
+  transition:transform .4s cubic-bezier(.23,1,.32,1);
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
   user-select:none;
@@ -284,8 +284,10 @@ details[open] .cr-judgment-summary::after{content:'－';}
 @media(min-width:480px){
   .card-select-item{width:52px;height:78px;}
 }
-.card-flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform .7s cubic-bezier(.23,1,.32,1);}
+.card-flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;-webkit-transform-style:preserve-3d;transition:transform 1s cubic-bezier(.23,1,.32,1);}
 .card-select-item.flipped .card-flip-inner{transform:rotateY(180deg);-webkit-transform:rotateY(180deg);}
+@keyframes cardPopUp{0%{transform:translate(var(--lx,0),var(--ly,0)) rotate(var(--rot,0deg)) scale(1.1);}60%{transform:translate(var(--lx,0),var(--ly,0)) rotate(var(--rot,0deg)) scale(1.35);}100%{transform:translate(var(--lx,0),var(--ly,0)) rotate(var(--rot,0deg)) scale(1.22);}}
+.card-select-item.selected{animation:cardPopUp .5s cubic-bezier(.23,1,.32,1) .85s forwards;}
 .card-select-back{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:2px;overflow:hidden;background:#8b1a1a;}
 .card-select-back img{width:100%;height:100%;object-fit:cover;display:block;}
 .card-back-inner{display:none;}
@@ -1265,7 +1267,6 @@ function initCardGrid(){
   const PIVOT_X=W/2;
   const PIVOT_Y=GRID_H+RADIUS*0.7; // 樞紐在格子下方很遠處，造成彩虹弧
 
-  console.log('initCardGrid: W='+W+' TOTAL='+TOTAL+' first card left='+(Math.round(W/2 - Math.sin(-SPAN/2*Math.PI/180)*RADIUS - 44/2)));
   grid.innerHTML=ids.map((id,i)=>{
     const hex=HEX.find(h=>h.id===id);
     const name=hex?hex.name:'';
@@ -1300,6 +1301,7 @@ function initCardGrid(){
 }
 
 function selectCard(id, el){
+  id=parseInt(id,10); // 確保是數字
   if(!el) el=document.getElementById('csi-'+id);
   if(!el) return;
 
@@ -1325,7 +1327,10 @@ function selectCard(id, el){
   const rad=angle*Math.PI/180;
   const liftX=(Math.sin(rad)*-28).toFixed(1);
   const liftY=(Math.cos(rad)*-28).toFixed(1);
-  el.style.transform=`translate(${liftX}px,${liftY}px) rotate(${(angle*0.2).toFixed(1)}deg) scale(1.1)`;
+  el.style.setProperty('--lx', liftX+'px');
+  el.style.setProperty('--ly', liftY+'px');
+  el.style.setProperty('--rot', (angle*0.2).toFixed(1)+'deg');
+  el.style.transform=`translate(${liftX}px,${liftY}px) rotate(${(angle*0.2).toFixed(1)}deg) scale(1.35)`;
   el.style.zIndex=200+selectedCardIds.length;
 
   setTimeout(()=>{ el.style.pointerEvents='auto'; },600);
@@ -1384,25 +1389,34 @@ function showCardLightbox(id){
 }
 
 async function confirmCards(){
-  // Ensure we have exactly the right number of valid cards
-  const drawn=selectedCardIds
+  // 把 selectedCardIds 轉成 HEX 物件，過濾掉無效的
+  const validIds=selectedCardIds.filter(id=>Number.isInteger(id)&&id>=1&&id<=64);
+  const drawn=validIds
     .slice(0, neededCount)
     .map(id=>HEX.find(h=>h.id===id))
-    .filter(Boolean);
+    .filter(h=>h&&h.id&&h.name); // 確保是完整的 hex 物件
 
-  if(drawn.length===0) return;
+  if(drawn.length===0){
+    alert('請先選牌');
+    return;
+  }
 
-  // 確保張數正確（最多補到 neededCount）
+  // 不足的張數用隨機補
   const maxCards=window._isTwoChoice?2:neededCount;
   const used=new Set(drawn.map(h=>h.id));
   while(drawn.length<maxCards){
     let h;
-    do{ h=randHex(); }while(used.has(h.id));
+    let tries=0;
+    do{ h=HEX[Math.floor(Math.random()*64)]; tries++; }
+    while((used.has(h.id)||!h.name)&&tries<100);
     used.add(h.id);
     drawn.push(h);
   }
-  // 如果是二選一，強制截斷到 2 張
+  // 二選一強制截斷到 2 張
   if(window._isTwoChoice) drawn.splice(2);
+  // 確保所有 drawn 都是有效的 hex
+  const finalDrawn=drawn.filter(h=>h&&h.id&&h.name&&h.judgment);
+  if(finalDrawn.length===0){alert('牌組載入失敗，請重試');return;}
 
   show('s2b');
   animateSteps();
@@ -1422,7 +1436,7 @@ async function confirmCards(){
 
   const[,data]=await Promise.all([
     new Promise(res=>runInkAnim(res)),
-    fetchReadingsWithCards(currentQ, spread, sr, drawn, window._isTwoChoice)
+    fetchReadingsWithCards(currentQ, spread, sr, finalDrawn, window._isTwoChoice)
   ]);
 
   resData=data;
@@ -1553,6 +1567,49 @@ const SYS=`你是一位精通易經的占卜師，但你說話的方式會根據
 把爻辭翻譯成畫面和感受：
 不說「九三爻提醒⋯⋯」→說「這個卦讓我看到一個畫面⋯⋯」
 不說「上六爻說⋯⋯」→直接說你從卦象看到的洞察
+
+13. 【融入現實情境的解讀——非常重要】
+
+根據問者的問題類型，主動融入對應的現實情境知識，讓解讀更有實際參考價值：
+
+【職場／商業類問題】
+當問者問的是工作、職涯、創業、談判、合作時：
+- 融入職場現實：產業環境、市場時機、人際政治、資源條件
+- 說「現在這個時間點的大環境是⋯⋯，這個卦象告訴我你的選擇」
+- 給出具體的行動：「這週可以做的一件事是⋯⋯」「談判前要確認的是⋯⋯」
+- 不只說方向，也說風險：「如果你選擇留下，三個月內你會面對⋯⋯」
+
+【感情／關係類問題】
+當問者問的是感情、婚姻、吸引力、關係修復時：
+- 融入關係心理：依附模式、溝通方式、時機與節奏
+- 說「在感情裡，這個卦象說的是⋯⋯這種能量」
+- 具體到行動：「這週適合⋯⋯，不適合⋯⋯」
+- 觸碰情感核心：「你真正害怕的是⋯⋯，卦象讓我看到這個」
+
+【人生方向／迷茫類問題】
+- 連結問者的具體生命階段（20代找方向 vs 30代轉型 vs 40代沉澱）
+- 說出「現在這個年紀做這件事，代表的是⋯⋯」
+- 給出長期視角：「一年後你會慶幸今天⋯⋯」
+
+13. 【情境資料融合——讓解讀更貼近現實】
+當問者的問題涉及以下領域，主動融入你知道的當代現實資訊：
+
+【職場/商業類問題】
+- 如果問轉職、換工作：結合當前就業市場的現實（例如哪個產業在縮編、哪個在擴張）
+- 如果問創業、投資：結合當前經濟環境的實際狀況（通膨、利率、市場氛圍）
+- 如果問職場關係、升職：結合組織行為和職場文化的現實觀察
+- 不要只說「卦象說時機好」，要說「現在這個時間點，加上卦象顯示⋯⋯，你的這個決定的現實條件是⋯⋯」
+
+【感情/關係類問題】
+- 如果問感情走向：結合人際關係的現實動態（例如長距離、文化差異、家庭壓力的實際影響）
+- 如果問是否該表白/挽回：結合對方可能的實際心理狀態，不只說「緣分」
+- 說話像一個既懂易經、又懂人情世故的老朋友，不是只會說「卦象顯示⋯⋯」
+
+【人生方向類問題】
+- 如果問移民、留學、重大生涯轉換：結合現實的機會成本和風險
+- 不要逃避給建議，要像一個真正懂行的前輩說話
+
+核心原則：卦象是骨架，現實是血肉。讓解讀既有易經的智慧，又接地氣。
 
 回應使用繁體中文。`;
 
@@ -2069,26 +2126,7 @@ function buildResult(data){
   const{spread,sr,drawn,yaoChanges,readings,synth}=data;
   let h='<div class="fade-in">';
 
-  // One-line anchor summary at very top (extracted from synth first line)
-  const synthLines=synth?synth.split('\n').filter(l=>l.trim()):[];
-  const anchor=synthLines.length>0?synthLines[0].slice(0,60)+(synthLines[0].length>60?'⋯⋯':''):'';
-  if(anchor){
-    h+=`<div class="result-anchor"><span class="anchor-icon">☯</span>${anchor}</div>`;
-  }
-
-  // Synthesis moved to TOP
-  if(synth){
-    h+=`<div class="synthesis synthesis-top">
-      <span class="synth-lbl">整體總結</span>
-      <div class="synth-txt">${formatSynth(synth)}</div>
-    </div>`;
-  }
-
-  h+=`<div class="spread-intro">
-    <div class="spread-badge">${spread.name}</div>
-    <div class="spread-desc-txt">${spread.desc}</div>
-  </div>`;
-
+  // 牌卡小圖放最上方
   h+='<div class="cards-grid">';
   drawn.forEach((hx,i)=>{
     const yc=yaoChanges?yaoChanges[i]:{movingYaos:[],changedHex:null};
@@ -2108,6 +2146,19 @@ function buildResult(data){
     </div>`;
   });
   h+='</div>';
+
+  // 整體總結在牌卡下方
+  if(synth){
+    h+=`<div class="synthesis synthesis-top">
+      <span class="synth-lbl">整體總結</span>
+      <div class="synth-txt">${formatSynth(synth)}</div>
+    </div>`;
+  }
+
+  h+=`<div class="spread-intro">
+    <div class="spread-badge">${spread.name}</div>
+    <div class="spread-desc-txt">${spread.desc}</div>
+  </div>`;
 
   drawn.forEach((hx,i)=>{
     const raw=readings[i]||'';
