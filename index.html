@@ -102,7 +102,7 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .btn-go-s{font-size:.6rem;letter-spacing:.22em;color:var(--muted);position:relative;}
 
 /* ══ S2: Animation ══ */
-#s2{background:var(--paper);justify-content:flex-start;align-items:center;position:relative;z-index:1;min-height:100vh;}
+#s2{background:var(--paper);justify-content:flex-start;align-items:stretch;position:relative;z-index:1;min-height:100vh;}
 .anim-wrap{display:flex;flex-direction:column;align-items:center;gap:2.2rem;}
 #inkCanvas{display:block;}
 .anim-txt{text-align:center;}
@@ -230,35 +230,44 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .synth-txt{font-size:.93rem;line-height:2.3;color:var(--ink);font-weight:300;}
 .btn-again{display:block;margin:2.5rem auto 0;background:none;border:none;cursor:pointer;font-family:'Noto Serif TC',serif;font-size:.7rem;letter-spacing:.3em;color:var(--muted);padding:.45rem 1rem;border-bottom:1px solid rgba(107,96,88,.25);transition:all .22s;}
 .btn-again:hover{color:var(--ink);border-color:var(--ink);}
-.s2-inner{width:100%;max-width:700px;margin:0 auto;padding:2rem 1rem 5rem;display:flex;flex-direction:column;align-items:center;}
+.s2-inner{width:100%;max-width:100%;margin:0;padding:1.5rem 1rem 5rem;display:flex;flex-direction:column;align-items:center;}
 .s2-header{text-align:center;margin-bottom:1.6rem;}
 .s2-title{font-size:.95rem;letter-spacing:.35em;color:var(--ink);margin-bottom:.5rem;}
 .s2-sub{font-size:.82rem;letter-spacing:.15em;color:var(--muted);margin-bottom:.5rem;min-height:1.5em;transition:all .3s;}
 .s2-count{color:var(--red);font-weight:700;}
 .s2-hint{font-size:.68rem;letter-spacing:.1em;color:rgba(107,96,88,.5);font-style:italic;line-height:1.8;}
 .cards-select-grid{
-  position:relative;
+  display:grid;
+  grid-template-columns:repeat(8,1fr);
+  gap:6px;
   width:100%;
-  height:260px;
-  margin-bottom:2rem;
-  overflow:visible;
+  margin-bottom:1.5rem;
+  padding:0 .2rem;
+}
+@media(min-width:480px){
+  .cards-select-grid{grid-template-columns:repeat(12,1fr);gap:5px;}
+}
+@media(min-width:700px){
+  .cards-select-grid{grid-template-columns:repeat(16,1fr);gap:5px;}
 }
 .card-select-item{
-  width:46px;
-  height:70px;
+  aspect-ratio:2/3;
   cursor:pointer;
-  position:absolute;
+  position:relative;
   border-radius:3px;
-  perspective:800px;
-  transition:transform .25s ease, filter .2s;
-  transform-origin:bottom center;
+  perspective:600px;
+  transition:transform .2s ease, box-shadow .2s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  user-select:none;
 }
-.card-select-item:hover:not(.selected){
-  filter:brightness(1.15);
-  z-index:50 !important;
+.card-select-item:active:not(.selected){
+  transform:scale(.94);
 }
 .card-select-item.selected{
-  z-index:30;
+  transform:translateY(-6px) scale(1.06);
+  box-shadow:0 6px 18px rgba(192,57,43,.35);
+  z-index:5;
 }
 .card-flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.23,1,.32,1);}
 .card-select-item.flipped .card-flip-inner{transform:rotateY(180deg);}
@@ -917,17 +926,6 @@ function changeApiKey(){
   show('s0');
 }
 
-// Reinit card grid on resize
-let _resizeTimer;
-window.addEventListener('resize',()=>{
-  clearTimeout(_resizeTimer);
-  _resizeTimer=setTimeout(()=>{
-    if(document.getElementById('s2').classList.contains('active')&&selectedCardIds.length===0){
-      initCardGrid();
-    }
-  },300);
-});
-
 // Init: load key if exists
 window.addEventListener('DOMContentLoaded',()=>{
   const key=loadApiKey();
@@ -1232,11 +1230,7 @@ function initCardGrid(){
   // Rainbow arc: all cards pivot from a single point far below
   // This creates a true semicircular fan like a deck of cards held in hand
   const gridW=grid.getBoundingClientRect().width||window.innerWidth||375;
-  const isMobile=gridW<480;
-  const pivotY=isMobile?260:320;
-  const radius=isMobile?220:280;
-  const arcSpan=isMobile?80:88;
-  const gridH=isMobile?200:260;
+  
 
   grid.innerHTML=ids.map((id,idx)=>{
     const hex=HEX.find(h=>h.id===id);
@@ -1271,8 +1265,8 @@ function initCardGrid(){
   }).join('');
 }
 
-function selectCard(id){
-  const el=document.getElementById('csi-'+id);
+function selectCard(id, el){
+  if(!el) el=document.getElementById('csi-'+id);
   if(!el) return;
 
   // Already selected → show lightbox
@@ -1281,35 +1275,33 @@ function selectCard(id){
     return;
   }
 
-  // Too many selected
+  // Already at max
   if(selectedCardIds.length>=neededCount){
     el.classList.add('shake');
     setTimeout(()=>el.classList.remove('shake'),400);
     return;
   }
 
-  const angle=parseFloat(el.dataset.angle)||0;
+  // Prevent double-click immediately
+  el.style.pointerEvents='none';
 
-  // Add to array first to prevent double-tap issues
   selectedCardIds.push(id);
   el.classList.add('selected','flipped');
 
-  // Lift card smoothly upward
-  const liftRad=angle*(Math.PI/180);
-  const liftX=Math.sin(liftRad)*(-24);
-  const liftY=Math.cos(liftRad)*(-24);
-  el.style.transform=`translate(${liftX}px,${liftY}px) rotate(${angle*0.2}deg) scale(1.08)`;
-  el.style.zIndex=100+selectedCardIds.length;
-  el.style.pointerEvents='none'; // prevent double-tap
+  setTimeout(()=>{ el.style.pointerEvents='auto'; },700);
 
-  // Re-enable pointer events after animation
-  setTimeout(()=>{ el.style.pointerEvents='auto'; },600);
+  updateSelectionUI();
+}
 
+function updateSelectionUI(){
   const btn=document.getElementById('s2ConfirmBtn');
   const remaining=neededCount-selectedCardIds.length;
   if(selectedCardIds.length>=neededCount){
-    if(btn){btn.style.display='block';btn.scrollIntoView({behavior:'smooth',block:'nearest'});}
-    document.getElementById('s2Sub').innerHTML=`<span style="color:var(--gold)">✓ 已選好 ${neededCount} 張，點下方確認</span>`;
+    if(btn){
+      btn.style.display='block';
+      setTimeout(()=>btn.scrollIntoView({behavior:'smooth',block:'nearest'}),300);
+    }
+    document.getElementById('s2Sub').innerHTML=`<span style="color:var(--gold)">✓ 已選好 ${neededCount} 張</span>`;
   }else{
     if(btn) btn.style.display='none';
     document.getElementById('s2Sub').innerHTML=`還需選 <span class="s2-count">${remaining}</span> 張`;
