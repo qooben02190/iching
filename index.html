@@ -176,7 +176,8 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .cr-name{font-size:1.15rem;font-weight:700;letter-spacing:.1em;display:block;margin-bottom:.2rem;}
 .cr-num{font-size:.6rem;letter-spacing:.2em;color:var(--muted);display:block;margin-bottom:.4rem;}
 .cr-nature-tag{font-size:.62rem;letter-spacing:.1em;color:var(--gold);display:block;margin-bottom:.5rem;}
-.cr-change-tag{font-size:.6rem;letter-spacing:.08em;color:var(--red);display:block;margin-top:.3rem;}
+.cr-change-tag{font-size:.6rem;letter-spacing:.05em;color:var(--red);display:block;margin-top:.4rem;line-height:1.7;}
+.cr-soul-line{font-size:.78rem;font-style:italic;color:var(--muted);line-height:1.8;display:block;margin-bottom:.3rem;}
 /* Reading sections */
 .cr-section{margin-bottom:1.4rem;}
 .cr-section-label{
@@ -202,6 +203,15 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .cr-actions li:last-child{border-bottom:none;}
 /* Divider between cards */
 .cr-divider{height:1px;background:linear-gradient(to right,transparent,rgba(139,115,64,.3),transparent);margin:2rem 0 3rem;}
+.cr-judgment{margin-top:1.2rem;border-top:1px solid var(--border);padding-top:.8rem;}
+.cr-judgment-summary{font-size:.62rem;letter-spacing:.2em;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;gap:.3rem;-webkit-tap-highlight-color:transparent;}
+.cr-judgment-summary::-webkit-details-marker{display:none;}
+.cr-judgment-summary::after{content:'＋';font-size:.7rem;color:var(--gold);transition:transform .2s;}
+details[open] .cr-judgment-summary::after{content:'－';}
+.cr-judgment-body{padding:.8rem 0 .3rem;}
+.cr-judgment-line{display:flex;gap:.8rem;margin-bottom:.6rem;align-items:flex-start;}
+.cr-j-label{font-size:.58rem;letter-spacing:.2em;color:var(--gold);flex-shrink:0;padding-top:.1rem;min-width:2.5rem;}
+.cr-j-text{font-size:.78rem;line-height:1.9;color:var(--muted);font-weight:300;letter-spacing:.04em;}
 /* Seen block */
 .seen-block{
   font-size:1rem;line-height:2.3;color:var(--ink);font-weight:400;
@@ -210,6 +220,8 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 /* Moving yao */
 .moving-yaos-block{background:rgba(192,57,43,.04);border-left:2px solid var(--red);padding:.8rem 1rem;margin-bottom:1.2rem;}
 .my-label{font-size:.58rem;letter-spacing:.28em;color:var(--red);display:block;margin-bottom:.4rem;}
+.my-change-desc{font-size:.85rem;line-height:1.9;color:var(--ink);font-weight:300;margin-bottom:.2rem;}
+.my-change-hint{font-size:.68rem;color:var(--muted);font-style:italic;}
 .my-item{font-size:.82rem;line-height:2;color:var(--ink);font-weight:300;}
 .my-arrow{font-size:.72rem;color:var(--red);margin-top:.4rem;padding-top:.4rem;border-top:1px solid rgba(192,57,43,.15);}
 @media(max-width:480px){
@@ -228,6 +240,7 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .synthesis{background:rgba(139,115,64,.07);border:1px solid rgba(139,115,64,.2);padding:1.6rem 1.8rem;margin:2rem 0;}
 .synth-lbl{font-size:.66rem;letter-spacing:.32em;color:var(--gold);margin-bottom:.9rem;display:block;}
 .synth-txt{font-size:1rem;line-height:2.3;color:var(--ink);font-weight:300;}
+.synth-txt br+span[style]{margin-top:.2rem;display:inline-block;}
 .btn-again{display:block;margin:2.5rem auto 0;background:none;border:none;cursor:pointer;font-family:'Noto Serif TC',serif;font-size:.7rem;letter-spacing:.3em;color:var(--muted);padding:.45rem 1rem;border-bottom:1px solid rgba(107,96,88,.25);transition:all .22s;}
 .btn-again:hover{color:var(--ink);border-color:var(--ink);}
 .s2-inner{width:100%;max-width:100%;margin:0;padding:1.5rem 1rem 3rem;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;}
@@ -1654,6 +1667,24 @@ ${profile&&profile.duration?`【解讀語氣提示】這件事困擾問者「${p
 牌陣：${spread.name}　此卦位置：「${role}」
 【特別說明】這張牌是問者從64張牌中親手挑選的，代表他/她當下的直覺感應，請在解讀中呼應這個「親手選擇」的意義。
 
+【牌陣位置解讀角度——非常重要，必須嚴格遵守】
+${spread.name==='天時・地利・人和'?`
+這是「天時・地利・人和」三牌陣，每個位置有專屬的解讀角度：
+- 若此卦位置是「天時（大環境）」：只解讀「外在大環境、時機、趨勢」——現在的時機好不好？外部條件支不支持？這股能量是順風還是逆風？
+- 若此卦位置是「地利（客觀條件）」：只解讀「實際條件、資源、現實面」——手上的牌夠不夠？條件是否到位？現實環境支不支持？
+- 若此卦位置是「人和（自身狀態）」：只解讀「問者自身的能量、心態、準備度」——問者現在的狀態適合嗎？內心準備好了嗎？自身的能量是收還是放？
+解讀時緊扣這個位置的角度，不要把三個位置都混在一起說。`
+:spread.name==='過去・現在・未來'?`
+這是「過去・現在・未來」三牌陣：
+- 「過去根源」：這件事的根源和來龍去脈是什麼？什麼因素造成了現在的狀況？
+- 「現在處境」：問者此刻真實的處境和能量是什麼？
+- 「未來走向」：如果繼續現在的方向，會走向哪裡？有什麼轉機或警示？`
+:spread.name==='二選一牌陣'?`
+這是二選一牌陣，解讀角度是比較：
+- 聚焦在這個選項的能量、風險、走向
+- 不要說「這個卦象徵⋯⋯」，而是說「選了這條路，你會⋯⋯」`
+:''}
+
 ━━ 本卦資料 ━━
 第${h.id}卦「${h.name}卦」
 上卦：${h.upper}　下卦：${h.lower}
@@ -1724,9 +1755,22 @@ ${hasChange?`【走向】
 語氣像朋友給建議，不像顧問寫報告。
 
 吉時資料已在上方提供，請自然融入建議裡——不是列出時間表，而是像占卜師說話的方式帶出來：
-- 如果問者的問題有具體的時間需求（什麼時候談、什麼時候行動），根據吉時資料給出具體的時段建議，說「卦象讓我感覺○○時段能量比較順」
+- 如果問者的問題有具體的時間需求，根據吉時資料給出具體的時段建議，說「卦象讓我感覺○○時段能量比較順」
 - 如果問題沒有時間需求，不需要強行加入吉時
-- 吉時說的是大致方向，不是精準預測，說話要留有餘地，例如「如果可以選的話，○○時段去會比較有利」`,
+
+【卦辭白話說明——必須包含】
+這張卦的卦辭是：「${h.judgment}」
+在解讀的某個自然的地方，用一句日常語言說明這句卦辭的意思，讓不懂古文的人也能理解。
+格式：「古人說『（卦辭關鍵字）』，意思是⋯⋯」或直接用畫面解釋，不要逐字翻譯，說出精神就好。
+
+${hasChange?`【爻變說明——必須包含】
+這次有動爻，本卦「${h.name}卦」→ 變為「${yc.changedHex.name}卦（${yc.changedHex.nature}）」。
+在走向段落裡，必須說清楚這個爻變的意義：
+- 本卦代表「現在的狀態和能量」
+- 動爻是「轉化的關鍵點」，說明哪個地方在動、在變
+- 變卦代表「如果順著這個能量走，最終會到達的狀態」
+用故事方式說：「現在是⋯⋯（本卦），因為⋯⋯（動爻），所以會走向⋯⋯（變卦）」
+不要說「爻變表示⋯⋯」，要說「這個變化讓我看到⋯⋯」`:''}`,
         3500
       );
     }));
@@ -1754,11 +1798,37 @@ ${isTwoChoice?`
 4. 最後一句給出「這個卦說：選A／選B，因為⋯⋯」
 不能兩個都說好，必須給出一個明確的答案。`:''}
 
-用說故事的方式，把這次所有卦象串成一個完整的故事告訴問者。
-第一段：「卦象讓我看到一幅畫面⋯⋯」——用畫面描述問者整體處境
-第二段：給出最核心的一個傾向或方向，明確不模糊
-最後兩句：「這個卦說：○○。」加一句說進心裡的話。
-語氣根據問題性質切換，不說套話。`,
+請用以下結構給出整體總結，不要只是流水帳敘事：
+
+【一句話畫面】
+「卦象讓我看到⋯⋯」——用一個畫面或比喻說出問者整體的處境，讓他讀完說「對，就是這樣」。一句話，不超過兩行。
+
+${spread.name==='天時・地利・人和'?`
+【三個維度的核心洞見】
+・天時：（外在時機和環境給了什麼訊號，一到兩句）
+・地利：（現實條件告訴你什麼，一到兩句）
+・人和：（你自己的狀態說明了什麼，一到兩句）`
+:spread.name==='過去・現在・未來'?`
+【三個時間點的核心洞見】
+・根源：（過去帶來了什麼，一句）
+・當下：（現在的處境關鍵，一句）
+・走向：（未來的傾向，一句）`
+:spread.name==='二選一牌陣'?`
+【兩個選項的比較】
+・選項A：（這條路的核心能量和風險，一到兩句）
+・選項B：（這條路的核心能量和風險，一到兩句）
+・卦象傾向：明確說出傾向哪個選項，不能模糊`
+:`【核心洞見】
+用兩到三個要點說出這次卦象最重要的訊息，每點一句，用「・」帶出`}
+
+【這個卦說】
+「這個卦說：○○。」——一個明確的答案。然後一句說進心裡的話，像老朋友最後說的那句話。
+
+格式要求：
+- 不要只是段落文字，要有「・」帶出的重點
+- 每個重點不超過兩句
+- 結尾必須有「這個卦說：」的明確答句
+- 語氣根據問題性質切換，不說套話`,
       2000
     );
 
@@ -1956,7 +2026,7 @@ function buildResult(data){
   if(synth){
     h+=`<div class="synthesis synthesis-top">
       <span class="synth-lbl">整體總結</span>
-      <div class="synth-txt">${synth.replace(/\n/g,'<br>')}</div>
+      <div class="synth-txt">${synth.replace(/\n/g,'<br>').replace(/・/g,'<span style="color:var(--gold)">・</span>')}</div>
     </div>`;
   }
 
@@ -1977,9 +2047,8 @@ function buildResult(data){
       <div class="card-name-row">
         <span class="card-hex-id">第 ${hx.id} 卦</span>
         <div class="card-hex-main">${hx.name}卦</div>
-        <div class="card-hex-tri">上${hx.upper}　下${hx.lower}</div>
-        <div class="card-hex-nat">${hx.nature}</div>
-        ${hasChange?`<div class="card-hex-change">↓ 變卦　第 ${yc.changedHex.id} 卦　${yc.changedHex.name}卦</div>`:'<div class="card-hex-pure">純卦・卦象穩定</div>'}
+        ${hx.soul?`<div class="card-hex-soul">${hx.soul}</div>`:''}
+        ${hasChange?`<div class="card-hex-change">↓ ${yc.changedHex.fullname||yc.changedHex.name+'卦'}</div>`:''}
       </div>
     </div>`;
   });
@@ -2009,9 +2078,8 @@ function buildResult(data){
           <span class="cr-pos-tag">${spread.slots[i]}</span>
           <span class="cr-name">${hx.fullname||hx.name+'卦'}</span>
           <span class="cr-num">第 ${hx.id} 卦</span>
-          <span class="cr-nature-tag">${hx.nature}</span>
-          ${hx.soul?`<span style="font-size:.75rem;font-style:italic;color:var(--muted);line-height:1.8;display:block;">${hx.soul}</span>`:''}
-          ${yc&&yc.changedHex?`<span class="cr-change-tag">↓ 變為${yc.changedHex.fullname||yc.changedHex.name+'卦'}</span>`:''}
+          ${hx.soul?`<span class="cr-soul-line">${hx.soul}</span>`:''}
+          ${yc&&yc.changedHex?`<span class="cr-change-tag">↓ 能量轉化為「${yc.changedHex.fullname||yc.changedHex.name+'卦'}」</span>`:''}
         </div>
       </div>`;
 
@@ -2019,9 +2087,9 @@ function buildResult(data){
 
     if(hasChange){
       h+=`<div class="moving-yaos-block">
-        <span class="my-label">天機所在</span>
-        ${yc.movingYaos.map(yi=>`<div class="my-item">${hx.yaoci[yi]}</div>`).join('')}
-        <div class="my-arrow">↓ 變為「${yc.changedHex.fullname||yc.changedHex.name+'卦'}」</div>
+        <span class="my-label">這次卦象有爻變</span>
+        <div class="my-change-desc">本卦「${hx.fullname||hx.name+'卦'}」→ 變為「${yc.changedHex.fullname||yc.changedHex.name+'卦'}」</div>
+        <div class="my-change-hint">爻變的意義已在解讀中說明</div>
       </div>`;
     }
 
@@ -2050,7 +2118,16 @@ function buildResult(data){
       </div>`;
     }
 
-    h+=`</div>${i<drawn.length-1?'<div class="cr-divider"></div>':''}`;
+    // 卦辭原文摺疊顯示
+    h+=`<details class="cr-judgment">
+      <summary class="cr-judgment-summary">查看原文卦辭</summary>
+      <div class="cr-judgment-body">
+        <div class="cr-judgment-line"><span class="cr-j-label">卦辭</span><span class="cr-j-text">${hx.judgment}</span></div>
+        <div class="cr-judgment-line"><span class="cr-j-label">象傳</span><span class="cr-j-text">${hx.image}</span></div>
+        ${yc&&yc.changedHex?`<div class="cr-judgment-line"><span class="cr-j-label">變卦</span><span class="cr-j-text">${yc.changedHex.fullname||yc.changedHex.name+'卦'}・${yc.changedHex.judgment}</span></div>`:''}
+      </div>
+    </details>
+    </div>${i<drawn.length-1?'<div class="cr-divider"></div>':''}`;
   });
 
   // Follow-up question box
