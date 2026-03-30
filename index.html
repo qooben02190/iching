@@ -125,9 +125,10 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .spread-reason{font-size:.7rem;letter-spacing:.13em;color:var(--red);margin-top:.4rem;}
 
 /* Cards grid */
-.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-bottom:2.4rem;padding:.5rem 0 1rem;}
+.cards-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:1.4rem;margin-bottom:2.4rem;padding:.5rem 0 1rem;}
+.card-unit{width:calc(33.333% - 1rem);min-width:100px;max-width:180px;}
 @media(max-width:480px){.cards-grid{gap:.8rem;}}
-.card-unit{display:flex;flex-direction:column;align-items:center;gap:.6rem;width:100%;}
+.card-unit{display:flex;flex-direction:column;align-items:center;gap:.6rem;}
 .card-img-frame{position:relative;width:80%;margin:0 auto;aspect-ratio:2/3;}
 @media(min-width:600px){.card-img-frame{width:70%;}}
 @keyframes cardReveal{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
@@ -144,38 +145,56 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .card-reading{
   margin-bottom:3rem;
 }
+/* 多張牌橫向並排容器 */
+.readings-wrap{
+  display:grid;
+  grid-template-columns:repeat(var(--card-count,1),1fr);
+  gap:2rem;
+  margin-bottom:2rem;
+}
+@media(max-width:600px){
+  .readings-wrap{
+    grid-template-columns:1fr;
+  }
+}
 /* Card hero banner */
 .cr-hero{
   display:flex;
-  gap:1.2rem;
-  align-items:flex-start;
-  padding:1.4rem;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  padding:1.4rem 1rem;
   background:rgba(26,22,20,.03);
-  border-left:3px solid var(--gold);
+  border-top:3px solid var(--gold);
   margin-bottom:1.4rem;
 }
 .cr-card-col{
-  width:90px;
-  min-width:90px;
-  flex-shrink:0;
+  width:100%;
+  max-width:140px;
+  margin-bottom:1rem;
 }
 .cr-card-img{
-  width:90px;
-  height:135px;
+  width:100%;
+  aspect-ratio:2/3;
   object-fit:cover;
-  border-radius:2px;
+  border-radius:3px;
   box-shadow:0 6px 20px rgba(26,22,20,.22);
   display:block;
 }
 .cr-card-img-placeholder{
-  width:90px;height:135px;background:var(--ink);border-radius:2px;
+  width:100%;aspect-ratio:2/3;background:var(--ink);border-radius:3px;
   display:flex;align-items:center;justify-content:center;
-  color:rgba(245,240,232,.2);font-size:1.2rem;
+  color:rgba(245,240,232,.2);font-size:1.5rem;
 }
-.cr-meta{flex:1;min-width:0;}
+.cr-meta{width:100%;min-width:0;text-align:center;}
 .cr-pos-tag{font-size:.58rem;letter-spacing:.28em;color:var(--paper);background:var(--gold);padding:.1rem .5rem;display:inline-block;margin-bottom:.5rem;}
 .cr-name{font-size:1.15rem;font-weight:700;letter-spacing:.1em;display:block;margin-bottom:.2rem;}
 .cr-num{font-size:.6rem;letter-spacing:.2em;color:var(--muted);display:block;margin-bottom:.4rem;}
+/* 橫向並排時調整 section 字體 */
+.readings-wrap .cr-section-label{font-size:.55rem;letter-spacing:.2em;}
+.readings-wrap .cr-section-body{font-size:.95rem;}
+.readings-wrap .cr-decision{font-size:1rem;padding:1rem 1.1rem;}
+.readings-wrap .cr-actions li{font-size:.92rem;}
 .cr-nature-tag{font-size:.62rem;letter-spacing:.1em;color:var(--gold);display:block;margin-bottom:.5rem;}
 .cr-change-tag{font-size:.6rem;letter-spacing:.05em;color:var(--red);display:block;margin-top:.4rem;line-height:1.7;}
 .cr-soul-line{font-size:.78rem;font-style:italic;color:var(--muted);line-height:1.8;display:block;margin-bottom:.3rem;}
@@ -228,10 +247,7 @@ details[open] .cr-judgment-summary::after{content:'－';}
 .yaobian-explainer-txt{font-size:.82rem;line-height:1.9;color:var(--muted);font-weight:300;}
 .my-item{font-size:.82rem;line-height:2;color:var(--ink);font-weight:300;}
 .my-arrow{font-size:.72rem;color:var(--red);margin-top:.4rem;padding-top:.4rem;border-top:1px solid rgba(192,57,43,.15);}
-@media(max-width:480px){
-  .cr-hero{flex-direction:row;gap:1rem;}
-  .cr-card-img,.cr-card-img-placeholder{width:70px;height:105px;min-width:70px;}
-}
+
 .tag{display:inline-block;font-size:.6rem;letter-spacing:.28em;color:var(--paper);padding:.13rem .52rem;margin-bottom:.55rem;margin-right:.3rem;}
 .tg-img{background:#5a4a2a;}
 .tg-plain{background:var(--red);}
@@ -468,14 +484,17 @@ details[open] .cr-judgment-summary::after{content:'－';}
 
   /* Cards grid on result */
   .cards-grid{gap:.6rem;padding:.3rem .3rem .8rem;}
-  .card-unit{min-width:70px;max-width:120px;}
+  .card-unit{width:calc(33.333% - .6rem);min-width:70px;max-width:130px;}
   .card-hex-main{font-size:.72rem;}
   .card-hex-soul{font-size:.56rem;}
   .card-pos-label{font-size:.6rem;}
 
   /* Reading cards */
-  .cr-hero{padding:1rem;gap:.9rem;margin-bottom:1rem;}
-  .cr-card-img,.cr-card-img-placeholder{width:72px;height:108px;min-width:72px;}
+  .cr-hero{flex-direction:row;align-items:flex-start;text-align:left;padding:1rem;gap:.9rem;margin-bottom:1rem;border-top:none;border-left:3px solid var(--gold);}
+  .cr-card-col{width:72px;max-width:72px;margin-bottom:0;}
+  .cr-card-img,.cr-card-img-placeholder{width:72px;height:108px;}
+  .cr-meta{text-align:left;}
+  .readings-wrap{grid-template-columns:1fr !important;}
   .cr-pos-tag{font-size:.54rem;}
   .cr-name{font-size:1rem;}
   .cr-num{font-size:.55rem;}
@@ -2183,6 +2202,10 @@ function buildResult(data){
     <div class="spread-desc-txt">${spread.desc}</div>
   </div>`;
 
+  // 橫向並排容器，根據牌數設定欄數
+  const cardCount=drawn.length;
+  h+=`<div class="readings-wrap" style="--card-count:${cardCount}">`;
+
   drawn.forEach((hx,i)=>{
     const raw=readings[i]||'';
     const yc=yaoChanges?yaoChanges[i]:{movingYaos:[],changedHex:null};
@@ -2262,6 +2285,8 @@ function buildResult(data){
     </details>
     </div>${i<drawn.length-1?'<div class="cr-divider"></div>':''}`;
   });
+
+  h+='</div>'; // close readings-wrap
 
   // Follow-up question box
   h+=`<div class="followup-wrap">
