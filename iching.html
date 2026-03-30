@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>易經占卜</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1614;--paper:#f5f0e8;--red:#c0392b;--gold:#8b7340;--muted:#6b6058;--border:rgba(26,22,20,.13);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--paper);font-family:'Noto Serif TC',serif;color:var(--ink);min-height:100vh;overflow-x:hidden;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='0.025'/%3E%3C/svg%3E");}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+.corner{position:fixed;width:50px;height:50px;z-index:0;opacity:.1;}
+.corner.tl{top:16px;left:16px;border-top:1px solid var(--ink);border-left:1px solid var(--ink);}
+.corner.tr{top:16px;right:16px;border-top:1px solid var(--ink);border-right:1px solid var(--ink);}
+.corner.bl{bottom:16px;left:16px;border-bottom:1px solid var(--ink);border-left:1px solid var(--ink);}
+.corner.br{bottom:16px;right:16px;border-bottom:1px solid var(--ink);border-right:1px solid var(--ink);}
+.screen{min-height:100vh;width:100%;display:none;flex-direction:column;align-items:center;}
+.screen.active{display:flex;}
+
+/* ══ S0: API Key ══ */
+#s0{justify-content:center;align-items:center;padding:2rem 1.5rem;}
+.s0-inner{width:100%;max-width:420px;text-align:center;}
+.s0-logo{font-size:2rem;font-weight:300;letter-spacing:.45em;display:block;margin-bottom:2rem;color:var(--ink);}
+.s0-title{font-size:.82rem;letter-spacing:.3em;color:var(--ink);margin-bottom:.8rem;}
+.s0-desc{font-size:.78rem;line-height:1.9;color:var(--muted);margin-bottom:1.8rem;letter-spacing:.05em;}
+.s0-input-wrap{margin-bottom:1rem;}
+.s0-input{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(26,22,20,.25);font-family:monospace;font-size:.85rem;color:var(--ink);padding:.6rem 0;outline:none;text-align:center;caret-color:var(--red);letter-spacing:.05em;}
+.s0-input:focus{border-color:var(--red);}
+.s0-input::placeholder{color:rgba(107,96,88,.35);font-family:monospace;}
+.s0-btn{background:var(--ink);border:none;font-family:'Noto Serif TC',serif;font-size:.78rem;letter-spacing:.28em;color:var(--paper);padding:.7rem 2rem;cursor:pointer;margin-top:.5rem;transition:all .2s;width:100%;}
+.s0-btn:hover{background:var(--red);}
+.s0-note{font-size:.68rem;color:var(--muted);margin-top:1.2rem;letter-spacing:.08em;}
+.s0-note a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(139,115,64,.3);}
+.s0-key-set{display:flex;align-items:center;gap:.5rem;justify-content:center;margin-top:.5rem;}
+.s0-key-badge{font-size:.62rem;letter-spacing:.15em;color:var(--gold);border:1px solid rgba(139,115,64,.3);padding:.12rem .5rem;}
+.s0-key-change{font-size:.62rem;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'Noto Serif TC',serif;letter-spacing:.12em;text-decoration:underline;}
+
+/* ══ S1: Question ══ */
+#s1{justify-content:center;padding:2rem 1.5rem;position:relative;z-index:1;overflow:hidden;}
+
+/* 水墨背景暈染 */
+#s1::before{
+  content:'';position:absolute;
+  top:-40%;left:-20%;width:140%;height:140%;
+  background:radial-gradient(ellipse 60% 50% at 30% 30%, rgba(139,115,64,.06) 0%, transparent 60%),
+             radial-gradient(ellipse 50% 60% at 75% 70%, rgba(26,22,20,.04) 0%, transparent 55%),
+             radial-gradient(ellipse 40% 40% at 60% 20%, rgba(192,57,43,.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+#s1::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:180px;
+  background:linear-gradient(to top, rgba(139,115,64,.04), transparent);
+  pointer-events:none;z-index:0;
+}
+
+.s1-inner{width:100%;max-width:560px;text-align:center;position:relative;z-index:1;}
+
+/* 水墨筆觸裝飾線 */
+.ink-stroke{display:block;margin:0 auto .6rem;opacity:.12;}
+
+.logo{font-size:clamp(2.2rem,7vw,3.8rem);font-weight:300;letter-spacing:.45em;display:block;margin-bottom:.4rem;position:relative;}
+.logo::after{content:'';display:block;width:1px;height:40px;background:linear-gradient(to bottom,var(--red),transparent);margin:.6rem auto 0;opacity:.6;}
+
+/* 水墨印章效果的副標題 */
+.logo-sub{font-size:.76rem;letter-spacing:.28em;color:var(--muted);font-weight:300;margin-bottom:.8rem;}
+.logo-seal{display:inline-block;font-size:.58rem;letter-spacing:.18em;color:var(--red);border:1px solid rgba(192,57,43,.3);padding:.12rem .55rem;margin-bottom:2rem;opacity:.75;background:rgba(192,57,43,.03);}
+
+.deck-intro{font-size:.76rem;line-height:2.1;color:var(--muted);font-weight:300;letter-spacing:.06em;margin-bottom:2rem;padding:1rem 1.2rem;position:relative;}
+.deck-intro::before,.deck-intro::after{content:'';display:block;height:1px;background:linear-gradient(to right,transparent,rgba(139,115,64,.3),transparent);}
+.deck-intro::before{margin-bottom:.8rem;}
+.deck-intro::after{margin-top:.8rem;}
+
+.q-label{font-size:.7rem;letter-spacing:.32em;color:var(--muted);margin-bottom:.8rem;display:block;}
+.q-wrap{position:relative;margin-bottom:.8rem;}
+.q-wrap::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(to right,transparent,rgba(26,22,20,.2),transparent);}
+.q-wrap::after{content:'';position:absolute;bottom:0;left:5%;right:5%;height:1px;background:linear-gradient(to right,transparent,rgba(139,115,64,.25),transparent);}
+textarea{width:100%;background:transparent;border:none;outline:none;font-family:'Noto Serif TC',serif;font-size:.95rem;font-weight:300;color:var(--ink);line-height:1.9;padding:.9rem 0;resize:none;text-align:center;caret-color:var(--red);}
+textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing:.05em;}
+
+/* Clarification hint */
+.clarify-hint{display:none;margin:.6rem 0 1rem;padding:.9rem 1.1rem;border:1px solid rgba(192,57,43,.3);background:rgba(192,57,43,.04);text-align:left;}
+.clarify-hint.show{display:block;}
+.clarify-title{font-size:.68rem;letter-spacing:.28em;color:var(--red);margin-bottom:.5rem;display:block;}
+.clarify-body{font-size:.85rem;line-height:1.9;color:var(--ink);font-weight:300;}
+.clarify-questions{margin-top:.6rem;padding-left:1rem;}
+.clarify-questions li{font-size:.82rem;line-height:1.9;color:var(--muted);list-style:none;padding-left:.6rem;}
+.clarify-questions li::before{content:'・';color:var(--red);margin-right:.2rem;}
+.clarify-anyway{background:none;border:none;font-family:'Noto Serif TC',serif;font-size:.7rem;letter-spacing:.22em;color:rgba(107,96,88,.6);cursor:pointer;margin-top:.7rem;padding:.2rem 0;border-bottom:1px solid rgba(107,96,88,.25);display:block;transition:all .2s;}
+.clarify-anyway:hover{color:var(--ink);}
+
+
+.btn-go{background:none;border:none;cursor:pointer;display:block;margin:0 auto;}
+.btn-go-inner{display:inline-flex;flex-direction:column;align-items:center;gap:.4rem;padding:.9rem 2.6rem;border:1px solid rgba(26,22,20,.25);position:relative;transition:all .35s;background:rgba(26,22,20,.02);}
+.btn-go-inner::before{content:'';position:absolute;inset:4px;border:1px solid rgba(192,57,43,.15);transition:all .35s;}
+.btn-go-inner::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(192,57,43,.04),transparent 70%);opacity:0;transition:opacity .3s;}
+.btn-go:hover .btn-go-inner{border-color:rgba(26,22,20,.6);transform:translateY(-3px);box-shadow:0 8px 24px rgba(26,22,20,.08);}
+.btn-go:hover .btn-go-inner::before{border-color:rgba(192,57,43,.4);}
+.btn-go:hover .btn-go-inner::after{opacity:1;}
+.btn-go-t{font-size:1rem;letter-spacing:.45em;color:var(--ink);position:relative;}
+.btn-go-s{font-size:.6rem;letter-spacing:.22em;color:var(--muted);position:relative;}
+
+/* ══ S2: Animation ══ */
+#s2{background:var(--paper);justify-content:center;align-items:center;position:relative;z-index:1;}
+.anim-wrap{display:flex;flex-direction:column;align-items:center;gap:2.2rem;}
+#inkCanvas{display:block;}
+.anim-txt{text-align:center;}
+.anim-main{font-size:.82rem;letter-spacing:.42em;color:var(--ink);margin-bottom:.5rem;}
+.anim-sub{font-size:.65rem;letter-spacing:.22em;color:var(--muted);min-height:1.2em;transition:opacity .4s;}
+
+/* ══ S3: Result ══ */
+#s3{background:var(--paper);padding:0;position:relative;z-index:1;align-items:stretch;}
+.s3-nav{width:100%;padding:1.4rem 1.5rem .9rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(245,240,232,.97);backdrop-filter:blur(4px);z-index:20;}
+.nav-back{background:none;border:none;cursor:pointer;font-family:'Noto Serif TC',serif;font-size:.68rem;letter-spacing:.22em;color:var(--muted);display:flex;align-items:center;gap:.35rem;transition:color .2s;padding:0;}
+.nav-back:hover{color:var(--ink);}
+.nav-back::before{content:'←';font-size:.85rem;}
+.nav-title{font-size:.72rem;letter-spacing:.35em;color:var(--muted);}
+.s3-body{width:100%;max-width:900px;margin:0 auto;padding:2rem 1.5rem 5rem;}
+
+/* Spread intro */
+.spread-intro{text-align:center;margin-bottom:2.4rem;padding-bottom:1.8rem;border-bottom:1px solid var(--border);}
+.spread-badge{display:inline-block;font-size:.66rem;letter-spacing:.3em;color:var(--paper);background:var(--gold);padding:.18rem .75rem;margin-bottom:.7rem;opacity:.9;}
+.spread-desc-txt{font-size:.8rem;letter-spacing:.13em;color:var(--muted);line-height:1.9;}
+.spread-reason{font-size:.7rem;letter-spacing:.13em;color:var(--red);margin-top:.4rem;}
+
+/* Cards grid */
+.cards-grid{display:flex;gap:1.2rem;justify-content:center;flex-wrap:nowrap;margin-bottom:2.4rem;overflow-x:auto;padding:.5rem .5rem 1rem;}
+@media(max-width:480px){.cards-grid{gap:.8rem;}}
+.card-unit{display:flex;flex-direction:column;align-items:center;gap:.5rem;min-width:90px;flex:1;max-width:160px;}
+.card-img-frame{position:relative;width:100%;aspect-ratio:2/3;}
+@keyframes cardReveal{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.card-img-frame img{width:100%;height:100%;object-fit:cover;display:block;animation:cardReveal .6s ease forwards;border-radius:3px;box-shadow:0 4px 16px rgba(26,22,20,.18);}
+.card-name-row{text-align:center;width:100%;}
+.card-hex-main{font-size:.82rem;font-weight:700;letter-spacing:.08em;color:var(--ink);display:block;margin-bottom:.2rem;line-height:1.5;}
+.card-hex-id{font-size:.6rem;letter-spacing:.15em;color:var(--muted);display:block;margin-bottom:.1rem;}
+.card-hex-soul{font-size:.62rem;line-height:1.6;color:var(--muted);font-style:italic;letter-spacing:.04em;display:block;margin-top:.2rem;text-align:center;}
+.card-pos-label{font-size:.68rem;letter-spacing:.15em;color:var(--muted);text-align:center;display:block;}
+.card-hex-tri{display:none;}
+.card-hex-nat{display:none;}
+
+/* Reading blocks */
+.card-reading{margin-bottom:3rem;padding-bottom:2.6rem;border-bottom:1px solid var(--border);}
+.card-reading:last-of-type{border-bottom:none;}
+.cr-header{display:flex;align-items:baseline;gap:.8rem;margin-bottom:1.6rem;flex-wrap:wrap;}
+.cr-num{font-size:.68rem;letter-spacing:.22em;color:var(--red);}
+.cr-name{font-size:1.1rem;font-weight:700;letter-spacing:.15em;}
+.cr-nature{font-size:.7rem;letter-spacing:.12em;color:var(--gold);}
+.cr-pos{font-size:.68rem;letter-spacing:.2em;color:var(--muted);}
+.tag{display:inline-block;font-size:.6rem;letter-spacing:.28em;color:var(--paper);padding:.13rem .52rem;margin-bottom:.55rem;margin-right:.3rem;}
+.tg-img{background:#5a4a2a;}
+.tg-plain{background:var(--red);}
+.tg-advice{background:var(--gold);}
+.tg-classic{background:var(--ink);opacity:.65;}
+.rtext{font-size:.93rem;line-height:2.3;color:var(--ink);font-weight:300;margin-bottom:1.2rem;}
+.rtext.classic{font-size:.85rem;line-height:2.1;color:var(--muted);border-left:2px solid rgba(26,22,20,.11);padding-left:.9rem;}
+
+/* Synthesis */
+.synthesis{background:rgba(139,115,64,.07);border:1px solid rgba(139,115,64,.2);padding:1.6rem 1.8rem;margin:2rem 0;}
+.synth-lbl{font-size:.66rem;letter-spacing:.32em;color:var(--gold);margin-bottom:.9rem;display:block;}
+.synth-txt{font-size:.93rem;line-height:2.3;color:var(--ink);font-weight:300;}
+.btn-again{display:block;margin:2.5rem auto 0;background:none;border:none;cursor:pointer;font-family:'Noto Serif TC',serif;font-size:.7rem;letter-spacing:.3em;color:var(--muted);padding:.45rem 1rem;border-bottom:1px solid rgba(107,96,88,.25);transition:all .22s;}
+.btn-again:hover{color:var(--ink);border-color:var(--ink);}
+.s2-inner{width:100%;max-width:700px;margin:0 auto;padding:1.5rem 1.2rem 5rem;display:flex;flex-direction:column;align-items:center;}
+.s2-header{text-align:center;margin-bottom:1.6rem;}
+.s2-title{font-size:.95rem;letter-spacing:.35em;color:var(--ink);margin-bottom:.5rem;}
+.s2-sub{font-size:.82rem;letter-spacing:.15em;color:var(--muted);margin-bottom:.5rem;min-height:1.5em;transition:all .3s;}
+.s2-count{color:var(--red);font-weight:700;}
+.s2-hint{font-size:.68rem;letter-spacing:.1em;color:rgba(107,96,88,.5);font-style:italic;line-height:1.8;}
+.cards-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;width:100%;max-width:500px;margin-bottom:2rem;}
+@media(min-width:540px){.cards-select-grid{grid-template-columns:repeat(6,1fr);max-width:680px;}}
+.card-select-item{aspect-ratio:2/3;cursor:pointer;position:relative;border-radius:2px;perspective:600px;}
+.card-select-item:hover:not(.flipped){transform:translateY(-4px);}
+.card-select-item:active{transform:scale(.97);}
+.card-flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);}
+.card-select-item.flipped .card-flip-inner{transform:rotateY(180deg);}
+.card-select-back{width:100%;height:100%;background:linear-gradient(160deg,#1a1614 60%,#2a2018);display:flex;align-items:center;justify-content:center;position:absolute;inset:0;border:1px solid rgba(139,115,64,.3);backface-visibility:hidden;border-radius:2px;}
+.card-back-inner{display:flex;flex-direction:column;align-items:center;gap:.3rem;padding:.4rem;}
+.card-back-line{width:70%;height:1px;background:rgba(139,115,64,.35);}
+.card-back-symbol{color:rgba(139,115,64,.45);font-size:1.1rem;}
+.card-select-front-wrap{width:100%;height:100%;position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);border-radius:2px;overflow:hidden;}
+.card-select-front{width:100%;height:100%;object-fit:cover;display:block;}
+.card-select-item.selected .card-select-front-wrap{outline:2px solid var(--red);box-shadow:0 0 12px rgba(192,57,43,.5);}
+.card-select-item.selected::after{content:'✓';position:absolute;top:4px;right:5px;font-size:.65rem;color:var(--red);background:rgba(245,240,232,.9);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;line-height:16px;text-align:center;z-index:10;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.card-reveal-name{font-family:"Noto Serif TC",serif;font-size:.55rem;letter-spacing:.08em;color:var(--muted);text-align:center;margin-top:.2rem;line-height:1.4;}
+.card-select-item.shake{animation:shake .3s ease;}
+.s2-confirm-btn{background:var(--ink);border:none;font-family:'Noto Serif TC',serif;font-size:.8rem;letter-spacing:.28em;color:var(--paper);padding:.8rem 2.8rem;cursor:pointer;transition:all .25s;margin-top:.8rem;position:relative;}
+.s2-confirm-btn::before{content:'';position:absolute;inset:3px;border:1px solid rgba(245,240,232,.15);pointer-events:none;}
+.s2-confirm-btn:hover{background:var(--red);}
+.s2-confirm-btn:active{transform:scale(.97);}
+.fade-in{animation:fi .65s ease forwards;}
+.reflect-hint{display:flex;align-items:flex-start;gap:.5rem;margin-bottom:.8rem;padding:.7rem .9rem;background:rgba(139,115,64,.07);border-left:2px solid var(--gold);animation:fi .3s ease;}
+.reflect-icon{font-size:.9rem;opacity:.6;flex-shrink:0;margin-top:.1rem;}
+.reflect-txt{font-size:.8rem;line-height:1.8;color:var(--gold);font-weight:300;letter-spacing:.06em;}
+.profile-row{display:flex;flex-direction:column;gap:.9rem;margin-bottom:1.2rem;text-align:left;}
+.profile-group{display:flex;flex-direction:column;gap:.4rem;}
+.profile-label{font-size:.62rem;letter-spacing:.28em;color:var(--muted);}
+.profile-btns{display:flex;gap:.4rem;flex-wrap:wrap;}
+.profile-btn{background:none;border:1px solid rgba(26,22,20,.18);font-family:'Noto Serif TC',serif;font-size:.72rem;letter-spacing:.12em;color:var(--muted);padding:.28rem .75rem;cursor:pointer;transition:all .2s;}
+.profile-btn:hover{border-color:var(--gold);color:var(--gold);}
+.profile-btn.on{border-color:var(--red);color:var(--red);background:rgba(192,57,43,.05);}
+.tg-time{background:#2a4a6a;}
+.mode-row{display:flex;gap:.5rem;justify-content:center;margin-bottom:1.2rem;}
+.mode-btn{background:none;border:1px solid rgba(26,22,20,.2);font-family:'Noto Serif TC',serif;font-size:.72rem;letter-spacing:.18em;color:var(--muted);padding:.32rem 1rem;cursor:pointer;transition:all .2s;}
+.mode-btn.on{border-color:var(--red);color:var(--red);background:rgba(192,57,43,.04);}
+.two-choice-wrap{margin-bottom:1rem;}
+.two-choice-hint{font-size:.68rem;letter-spacing:.15em;color:var(--muted);text-align:center;margin-bottom:.8rem;}
+.two-choice-inputs{display:flex;flex-direction:column;gap:.5rem;}
+.choice-item{display:flex;align-items:center;gap:.6rem;}
+.choice-label{font-size:.65rem;letter-spacing:.2em;color:var(--red);flex-shrink:0;width:2.8rem;}
+.choice-input{flex:1;background:transparent;border:none;border-bottom:1px solid rgba(26,22,20,.2);font-family:'Noto Serif TC',serif;font-size:.9rem;color:var(--ink);padding:.4rem 0;outline:none;caret-color:var(--red);transition:border-color .2s;}
+.choice-input:focus{border-color:var(--red);}
+.choice-input::placeholder{color:rgba(107,96,88,.35);}
+.choice-divider{text-align:center;font-size:.7rem;letter-spacing:.2em;color:var(--muted);padding:.3rem 0;}
+.two-choice-context-label{font-size:.63rem;letter-spacing:.2em;color:var(--muted);margin-top:.8rem;margin-bottom:.3rem;}
+.test-mode-wrap{margin-top:1.2rem;text-align:center;}
+.test-mode-label{font-size:.65rem;letter-spacing:.1em;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;}
+.test-mode-label input{accent-color:var(--gold);}
+.test-mode-badge{display:inline-block;font-size:.58rem;letter-spacing:.2em;color:var(--paper);background:var(--gold);padding:.1rem .5rem;margin-left:.4rem;vertical-align:middle;}
+.privacy-note{font-size:.62rem;letter-spacing:.1em;color:rgba(107,96,88,.5);text-align:center;margin-bottom:1.2rem;}
+.anim-notice{font-size:.65rem;letter-spacing:.15em;color:var(--muted);margin-top:1.2rem;line-height:2;text-align:center;}
+.anim-steps{margin-top:1rem;display:flex;flex-direction:column;gap:.3rem;align-items:center;}
+.anim-step{font-size:.62rem;letter-spacing:.2em;color:rgba(107,96,88,.35);transition:color .4s;}
+.anim-step.active{color:var(--red);}
+.anim-step.done{color:var(--gold);}
+.anim-tip{font-size:.62rem;letter-spacing:.12em;color:var(--gold);margin-top:.6rem;min-height:1.2em;text-align:center;transition:opacity .3s;}
+.s3-question-bar{padding:.7rem 1.5rem;background:rgba(139,115,64,.07);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem;}
+.s3q-label{font-size:.58rem;letter-spacing:.28em;color:var(--gold);flex-shrink:0;}
+.s3q-text{font-size:.82rem;color:var(--ink);font-weight:300;flex:1;line-height:1.7;}
+.s3q-date{font-size:.6rem;letter-spacing:.12em;color:var(--muted);flex-shrink:0;}
+.card-hex-change{font-size:.64rem;letter-spacing:.12em;color:var(--red);margin-top:.3rem;}
+.decision-block{font-size:1.05rem;font-weight:700;letter-spacing:.08em;color:var(--ink);margin:1.2rem 0;padding:1rem 1.2rem;border:1px solid rgba(26,22,20,.15);border-left:3px solid var(--ink);background:rgba(26,22,20,.03);}
+.seen-block{font-size:1rem;line-height:2.1;color:var(--ink);font-weight:400;margin-bottom:1.4rem;padding:.9rem 1.1rem;border-left:3px solid var(--red);background:rgba(192,57,43,.03);font-style:italic;}
+.result-anchor{text-align:center;padding:1.4rem 1.5rem 1rem;font-size:.9rem;line-height:1.8;color:var(--ink);font-weight:300;letter-spacing:.06em;border-bottom:1px solid var(--border);}
+.anchor-icon{font-size:1rem;margin-right:.5rem;opacity:.5;}
+.synthesis-top{margin:1.4rem 0 0;}
+.followup-wrap{max-width:900px;margin:0 auto;padding:0 1.5rem 1rem;}
+.followup-box{border:1px solid rgba(139,115,64,.25);padding:1.4rem 1.5rem;background:rgba(139,115,64,.04);}
+.followup-lbl{font-size:.62rem;letter-spacing:.3em;color:var(--gold);display:block;margin-bottom:.3rem;}
+.followup-desc{font-size:.78rem;color:var(--muted);margin-bottom:.8rem;letter-spacing:.06em;}
+.followup-input{width:100%;background:rgba(255,255,255,.5);border:1px solid rgba(26,22,20,.15);font-family:'Noto Serif TC',serif;font-size:.88rem;color:var(--ink);padding:.65rem .9rem;resize:none;outline:none;line-height:1.8;caret-color:var(--red);}
+.followup-input::placeholder{color:rgba(107,96,88,.38);}
+.followup-btn{margin-top:.6rem;background:none;border:1px solid rgba(26,22,20,.28);font-family:'Noto Serif TC',serif;font-size:.72rem;letter-spacing:.25em;color:var(--ink);padding:.4rem 1.2rem;cursor:pointer;transition:all .2s;}
+.followup-btn:hover{border-color:var(--red);color:var(--red);}
+.followup-btn:disabled{opacity:.4;cursor:not-allowed;}
+.followup-answer{margin-top:1rem;padding:1rem 1.1rem;border-left:2px solid var(--gold);background:rgba(139,115,64,.06);}
+.followup-ans-lbl{font-size:.6rem;letter-spacing:.28em;color:var(--gold);display:block;margin-bottom:.5rem;}
+.new-div-prompt{padding:.8rem 0;}
+.ndp-reason{font-size:.88rem;line-height:1.9;color:var(--ink);font-weight:300;margin-bottom:.8rem;}
+.ndp-preview{font-size:.84rem;line-height:1.9;color:var(--muted);font-style:italic;margin-bottom:1rem;padding:.6rem .8rem;border-left:2px solid var(--gold);background:rgba(139,115,64,.05);}
+.ndp-btn{display:block;width:100%;background:var(--ink);border:none;font-family:'Noto Serif TC',serif;font-size:.78rem;letter-spacing:.2em;color:var(--paper);padding:.7rem 1rem;cursor:pointer;margin-bottom:.5rem;transition:all .2s;}
+.ndp-btn:hover{background:var(--red);}
+.ndp-note{font-size:.62rem;letter-spacing:.1em;color:var(--muted);text-align:center;}
+.followup-ans-txt{font-size:.9rem;line-height:2.2;color:var(--ink);font-weight:300;}
+.feedback-wrap{max-width:900px;margin:0 auto;padding:0 1.5rem 1rem;}
+.feedback-box{border:1px solid var(--border);padding:1.4rem 1.5rem;}
+.feedback-lbl{font-size:.62rem;letter-spacing:.32em;color:var(--gold);display:block;margin-bottom:.8rem;}
+.feedback-q{font-size:.85rem;color:var(--ink);font-weight:300;margin-bottom:.6rem;letter-spacing:.06em;}
+.feedback-btns{display:flex;gap:.5rem;flex-wrap:wrap;}
+.fb-btn{background:none;border:1px solid rgba(26,22,20,.2);font-family:'Noto Serif TC',serif;font-size:.74rem;letter-spacing:.1em;color:var(--muted);padding:.36rem .85rem;cursor:pointer;transition:all .2s;}
+.fb-btn:hover{border-color:var(--gold);color:var(--gold);}
+.fb-btn.selected{border-color:var(--red);color:var(--red);background:rgba(192,57,43,.05);}
+.feedback-comment-wrap{margin-top:1.2rem;}
+.feedback-comment{width:100%;background:rgba(255,255,255,.5);border:1px solid rgba(26,22,20,.15);font-family:'Noto Serif TC',serif;font-size:.85rem;color:var(--ink);padding:.65rem .9rem;resize:none;outline:none;line-height:1.8;}
+.feedback-comment::placeholder{color:rgba(107,96,88,.38);}
+.fb-submit{margin-top:.6rem;background:none;border:1px solid rgba(26,22,20,.28);font-family:'Noto Serif TC',serif;font-size:.7rem;letter-spacing:.25em;color:var(--ink);padding:.38rem 1.1rem;cursor:pointer;transition:all .2s;}
+.fb-submit:hover{border-color:var(--red);color:var(--red);}
+.feedback-thanks{text-align:center;padding:.8rem 0;}
+.thanks-text{font-size:.82rem;line-height:2;color:var(--muted);letter-spacing:.08em;}
+.card-hex-pure{font-size:.62rem;letter-spacing:.12em;color:var(--muted);margin-top:.3rem;opacity:.7;}
+.moving-yaos-block{background:rgba(192,57,43,.05);border:1px solid rgba(192,57,43,.2);padding:.9rem 1rem;margin-bottom:1.2rem;}
+.my-label{font-size:.6rem;letter-spacing:.28em;color:var(--red);display:block;margin-bottom:.5rem;}
+.my-item{font-size:.84rem;line-height:2;color:var(--ink);font-weight:400;border-bottom:1px solid rgba(192,57,43,.1);padding:.05rem 0;}
+.my-item:last-of-type{border-bottom:none;}
+.my-arrow{font-size:.75rem;letter-spacing:.1em;color:var(--red);margin-top:.55rem;padding-top:.45rem;border-top:1px solid rgba(192,57,43,.2);}
+.tg-change{background:#5a3060;}
+@keyframes fi{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+
+<!-- ══ S0: API Key Setup ══ -->
+<div class="screen" id="s0">
+  <div class="s0-inner">
+    <span class="s0-logo">易經占卜</span>
+    <div class="s0-title">設定 API Key</div>
+    <div class="s0-desc">請輸入你的 Anthropic API Key<br>只會儲存在你的瀏覽器裡，不會上傳到任何地方</div>
+    <div class="s0-input-wrap">
+      <input type="password" id="apiKeyInput" class="s0-input" placeholder="sk-ant-...">
+    </div>
+    <button class="s0-btn" onclick="saveApiKey()">儲存並開始占卜</button>
+    <div class="s0-note">沒有 API Key？<a href="https://console.anthropic.com" target="_blank">點這裡申請</a></div>
+  </div>
+</div>
+
+<!-- ══ S1: Question ══ -->
+<div class="screen active" id="s1">
+  <div class="s1-inner">
+    <span class="logo">易經占卜</span>
+    <p class="logo-sub">靜心，問卦，聆聽古老的智慧</p>
+
+    <p class="deck-intro">這套易經牌卡由德國藝術家 Klaus Holitzka 手繪，六十四張，每一張都是一幅畫。水墨、金線、古典中國水彩的筆觸——你很難在別的地方見到易經被這樣呈現。你抽到的那張牌，不只是一個卦象，而是一個為你此刻而存在的畫面。</p>
+    <span class="q-label">請輸入你想詢問的問題</span>
+
+    <div class="mode-row">
+      <button class="mode-btn on" id="modeFree" onclick="setMode('free')">一般問題</button>
+      <button class="mode-btn" id="modeTwo" onclick="setMode('two')">二選一</button>
+    </div>
+
+    <!-- Two choice inputs -->
+    <div class="two-choice-wrap" id="twoChoiceWrap" style="display:none;">
+      <div class="two-choice-hint">輸入你在猶豫的兩個選項</div>
+      <div class="two-choice-inputs">
+        <div class="choice-item">
+          <span class="choice-label">選項 A</span>
+          <input type="text" id="choiceA" class="choice-input" placeholder="例如：繼續現在的工作">
+        </div>
+        <div class="choice-divider">還是</div>
+        <div class="choice-item">
+          <span class="choice-label">選項 B</span>
+          <input type="text" id="choiceB" class="choice-input" placeholder="例如：接受新的 offer">
+        </div>
+      </div>
+      <div class="two-choice-context-label">補充說明（選填）</div>
+    </div>
+
+    <div class="profile-row">
+      <div class="profile-group">
+        <span class="profile-label">性別</span>
+        <div class="profile-btns" id="genderBtns">
+          <button class="profile-btn" onclick="selectProfile('gender','男性',this)">男性</button>
+          <button class="profile-btn" onclick="selectProfile('gender','女性',this)">女性</button>
+          <button class="profile-btn" onclick="selectProfile('gender','不透露',this)">不透露</button>
+        </div>
+      </div>
+      <div class="profile-group">
+        <span class="profile-label">年齡層</span>
+        <div class="profile-btns" id="ageBtns">
+          <button class="profile-btn" onclick="selectProfile('age','20代',this)">20代</button>
+          <button class="profile-btn" onclick="selectProfile('age','30代',this)">30代</button>
+          <button class="profile-btn" onclick="selectProfile('age','40代',this)">40代</button>
+          <button class="profile-btn" onclick="selectProfile('age','50代以上',this)">50代以上</button>
+        </div>
+      </div>
+      <div class="profile-group">
+        <span class="profile-label">這件事困擾你多久了？</span>
+        <div class="profile-btns" id="durationBtns">
+          <button class="profile-btn" onclick="selectProfile('duration','剛發生',this)">剛發生</button>
+          <button class="profile-btn" onclick="selectProfile('duration','一個月左右',this)">一個月左右</button>
+          <button class="profile-btn" onclick="selectProfile('duration','半年以上',this)">半年以上</button>
+          <button class="profile-btn" onclick="selectProfile('duration','超過一年',this)">超過一年</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="q-wrap">
+      <textarea id="qIn" rows="4" placeholder="請盡量描述具體的情況，例如：我在現在這份工作做了兩年，最近有另一個機會，但不確定是否該換..." oninput="showReflect(this.value)"></textarea>
+    </div>
+    <div class="reflect-hint" id="reflectHint" style="display:none;">
+      <span class="reflect-icon">☯</span>
+      <span class="reflect-txt" id="reflectTxt"></span>
+    </div>
+    <div class="privacy-note">🔒 你的問題僅用於本次解讀，不會被儲存或分享</div>
+
+    <!-- Clarification hint box -->
+    <div class="clarify-hint" id="clarifyHint">
+      <span class="clarify-title">問卦前，請多告訴我一些</span>
+      <div class="clarify-body" id="clarifyBody"></div>
+      <ul class="clarify-questions" id="clarifyQuestions"></ul>
+      <button class="clarify-anyway" onclick="proceedAnyway()">問題就這樣，繼續占卜</button>
+    </div>
+
+
+    <button class="btn-go" id="btnGo" onclick="handleGo()">
+      <div class="btn-go-inner">
+        <span class="btn-go-t">起　卦</span>
+        <span class="btn-go-s">點此占卜</span>
+      </div>
+    </button>
+    <div class="test-mode-wrap">
+      <label class="test-mode-label">
+        <input type="checkbox" id="testModeToggle" onchange="toggleTestMode(this.checked)">
+        <span>測試模式（不需要 API Key）</span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S2: Card Selection ══ -->
+<div class="screen" id="s2">
+  <div class="s2-inner">
+    <div class="s2-header">
+      <div class="s2-title">靜心，感受牌的召喚</div>
+      <div class="s2-sub" id="s2Sub">請選擇 <span id="s2NeedCount" class="s2-count">3</span> 張牌</div>
+      <div class="s2-hint">閉上眼睛，想著你的問題，然後點選你感應到的牌</div>
+    </div>
+    <div class="cards-select-grid" id="cardsSelectGrid"></div>
+    <button class="s2-confirm-btn" id="s2ConfirmBtn" onclick="confirmCards()" style="display:none;">
+      確認選牌，開始解讀
+    </button>
+  </div>
+</div>
+
+<!-- ══ S2b: Ink Animation ══ -->
+<div class="screen" id="s2b">
+  <div class="anim-wrap">
+    <canvas id="inkCanvas" width="220" height="290"></canvas>
+    <div class="anim-txt">
+      <div class="anim-main">天機運轉中</div>
+      <div class="anim-sub" id="animSub">靜候天地感應⋯⋯</div>
+      <div class="anim-notice">AI 深度解讀中，約需 30－60 秒<br>請靜心等候，勿關閉頁面</div>
+      <div class="anim-steps" id="animSteps">
+        <div class="anim-step" id="step1">⊙ 感應卦象</div>
+        <div class="anim-step" id="step2">⊙ 選擇牌陣</div>
+        <div class="anim-step" id="step3">⊙ 深度解讀爻義</div>
+        <div class="anim-step" id="step4">⊙ 彙整洞見與建議</div>
+      </div>
+      <div class="anim-tip" id="animTip"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S3: Result ══ -->
+<div class="screen" id="s3">
+  <div class="s3-nav">
+    <button class="nav-back" onclick="goBack()">重新占卜</button>
+    <span class="nav-title">占卜結果</span>
+    <span style="width:72px;"></span>
+  </div>
+  <div class="s3-question-bar" id="s3QuestionBar" style="display:none;">
+    <span class="s3q-label">你的問題</span>
+    <span class="s3q-text" id="s3QuestionText"></span>
+    <span class="s3q-date" id="s3DateText"></span>
+  </div>
+  <div class="s3-body" id="s3body"></div>
+</div>
+
+
+<script>
+
+/* ══ 吉時對照（根據五行） ══ */
+const WUXING_TIME={
+  '金':{
+    bestTime:'下午3點到7點（申酉時）',
+    bestDay:'庚辛日（逢4、9的日期）',
+    bestSeason:'秋天',
+    avoid:'中午11點到1點',
+    note:'金的能量在傍晚最旺，適合需要決斷和收穫的事'
+  },
+  '木':{
+    bestTime:'早上5點到9點（寅卯時）',
+    bestDay:'甲乙日（逢1、6的日期）',
+    bestSeason:'春天',
+    avoid:'傍晚5點到7點',
+    note:'木的能量在清晨最旺，適合新開始和向上突破的事'
+  },
+  '水':{
+    bestTime:'晚上9點到凌晨1點（亥子時）',
+    bestDay:'壬癸日（逢2、7的日期）',
+    bestSeason:'冬天',
+    avoid:'上午9點到11點',
+    note:'水的能量在夜晚最深，適合深思熟慮和沉澱的事'
+  },
+  '火':{
+    bestTime:'上午11點到下午1點（午時）',
+    bestDay:'丙丁日（逢3、8的日期）',
+    bestSeason:'夏天',
+    avoid:'傍晚到深夜',
+    note:'火的能量在正午最盛，適合需要表現和被看見的事'
+  },
+  '土':{
+    bestTime:'上午7點到9點（辰時）或下午1點到3點（未時）',
+    bestDay:'戊己日（逢5、0的日期）',
+    bestSeason:'四季交替之際',
+    avoid:'無特別忌諱，但避免太極端的時段',
+    note:'土的能量平穩持中，適合需要穩定和落實的事'
+  }
+};
+
+function getAuspiciousTime(hex){
+  const upperTri=getTrigramName(hex.upper);
+  const lowerTri=getTrigramName(hex.lower);
+  const upperWx=(TRIGRAM_INFO[upperTri]||{}).wuxing||'';
+  const lowerWx=(TRIGRAM_INFO[lowerTri]||{}).wuxing||'';
+  // Upper trigram (外卦) leads for external matters
+  const mainWx=upperWx||lowerWx;
+  const timeInfo=WUXING_TIME[mainWx]||{};
+  return{mainWx,upperWx,lowerWx,...timeInfo};
+}
+
+/* ══ 八卦方位、五行、顏色對照 ══ */
+const TRIGRAM_INFO={
+  '乾':{dir:'西北',wuxing:'金',colors:['白色','金色','銀色'],energy:'剛健向上，適合需要決斷力的方向'},
+  '兌':{dir:'西',wuxing:'金',colors:['白色','金色'],energy:'喜悅流通，適合需要溝通協調的方向'},
+  '離':{dir:'南',wuxing:'火',colors:['紅色','橙色','紫色'],energy:'光明顯現，適合需要表現與被看見的方向'},
+  '震':{dir:'東',wuxing:'木',colors:['綠色','青色'],energy:'生發行動，適合新開始與突破的方向'},
+  '巽':{dir:'東南',wuxing:'木',colors:['綠色','青色','淡藍'],energy:'柔和滲透，適合需要耐心積累的方向'},
+  '坎':{dir:'北',wuxing:'水',colors:['黑色','深藍','深灰'],energy:'深沉蓄積，適合需要沉澱與潛行的方向'},
+  '艮':{dir:'東北',wuxing:'土',colors:['黃色','棕色','米色'],energy:'穩定守止，適合需要打好基礎的方向'},
+  '坤':{dir:'西南',wuxing:'土',colors:['黃色','棕色','橙黃'],energy:'包容承載，適合需要配合與支持的方向'},
+};
+
+/* 五行相生：木→火→土→金→水→木 */
+/* 五行相剋：木→土→水→火→金→木 */
+const WUXING_SHENG={'木':'火','火':'土','土':'金','金':'水','水':'木'};
+const WUXING_KE={'木':'土','土':'水','水':'火','火':'金','金':'木'};
+
+function getTrigramName(upper_str){
+  const names=['乾','兌','離','震','巽','坎','艮','坤'];
+  return names.find(n=>upper_str.includes(n))||'';
+}
+
+function getDirColorInfo(hex){
+  const upperTri=getTrigramName(hex.upper);
+  const lowerTri=getTrigramName(hex.lower);
+  const upperInfo=TRIGRAM_INFO[upperTri]||{};
+  const lowerInfo=TRIGRAM_INFO[lowerTri]||{};
+
+  // Favorable direction: upper trigram leads (上卦主外，代表目標方向)
+  const favorDir=upperInfo.dir||'';
+  const favorColors=upperInfo.colors||[];
+
+  // Check wuxing relation between upper and lower
+  const upperWx=upperInfo.wuxing||'';
+  const lowerWx=lowerInfo.wuxing||'';
+  let wxNote='';
+  if(upperWx&&lowerWx){
+    if(WUXING_SHENG[lowerWx]===upperWx) wxNote=`下卦${lowerWx}生上卦${upperWx}，內部能量助力充足，往${favorDir}發展有根基`;
+    else if(WUXING_SHENG[upperWx]===lowerWx) wxNote=`上卦${upperWx}洩入下卦${lowerWx}，能量外放，往${favorDir}發展需注意不要過於消耗`;
+    else if(WUXING_KE[upperWx]===lowerWx) wxNote=`上卦${upperWx}制下卦${lowerWx}，目標明確但內部有張力`;
+    else if(WUXING_KE[lowerWx]===upperWx) wxNote=`下卦${lowerWx}制上卦${upperWx}，前進方向受到內部能量制約，需先處理自身狀態`;
+    else wxNote=`上下卦同氣（${upperWx}），能量純粹，往${favorDir}發展力道集中`;
+  }
+
+  return {
+    upperDir:upperInfo.dir||'',
+    lowerDir:lowerInfo.dir||'',
+    favorDir,
+    favorColors,
+    upperColors:upperInfo.colors||[],
+    lowerColors:lowerInfo.colors||[],
+    upperEnergy:upperInfo.energy||'',
+    lowerEnergy:lowerInfo.energy||'',
+    wxNote
+  };
+}
+
+const HEX=[
+  {id:1,soul:'天在運行，從不停歇。',fullname:'乾為天',name:'乾',upper:'乾（天）',lower:'乾（天）',nature:'剛健、純陽、創始、領導',judgment:'乾：元，亨，利，貞。',tuan:'大哉乾元，萬物資始，乃統天。雲行雨施，品物流形。大明終始，六位時成，時乘六龍以御天。乾道變化，各正性命，保合大和，乃利貞。首出庶物，萬國咸寧。',image:'天行健，君子以自強不息。',yaoci:['初九：潛龍，勿用。','九二：見龍在田，利見大人。','九三：君子終日乾乾，夕惕若厲，無咎。','九四：或躍在淵，無咎。','九五：飛龍在天，利見大人。','上九：亢龍有悔。'],visual:'六條完整陽爻並列如利劍，純粹的創造力量，無一絲猶豫。',wuxing:'上金下金',wxrel:'比和（同氣）'},
+  {id:2,soul:'大地承載一切，不問值不值得。',fullname:'坤為地',name:'坤',upper:'坤（地）',lower:'坤（地）',nature:'柔順、包容、承載、輔助',judgment:'坤：元，亨，利牝馬之貞。君子有攸往，先迷後得主，利，西南得朋，東北喪朋，安貞吉。',tuan:'至哉坤元，萬物資生，乃順承天。坤厚載物，德合無疆，含弘光大，品物咸亨。牝馬地類，行地無疆，柔順利貞。君子攸行，先迷失道，後順得常。',image:'地勢坤，君子以厚德載物。',yaoci:['初六：履霜，堅冰至。','六二：直，方，大，不習無不利。','六三：含章可貞，或從王事，無成有終。','六四：括囊，無咎無譽。','六五：黃裳，元吉。','上六：龍戰于野，其血玄黃。'],visual:'六條斷開陰爻如大地層層紋理，柔而不弱，靜靜承載萬物。',wuxing:'上土下土',wxrel:'比和（同氣）'},
+  {id:3,soul:'破土的那一刻，最難也最美。',fullname:'水雷屯',name:'屯',upper:'坎（水）',lower:'震（雷）',nature:'萌生、艱難、蓄積、草創',judgment:'屯：元，亨，利，貞，勿用有攸往，利建侯。',tuan:'屯，剛柔始交而難生。動乎險中，大亨貞。雷雨之動滿盈，天造草昧，宜建侯而不寧。',image:'雲雷屯，君子以經綸。',yaoci:['初九：磐桓，利居貞，利建侯。','六二：屯如，邅如，乘馬班如，匪寇婚媾，女子貞不字，十年乃字。','六三：即鹿無虞，惟入于林中，君子幾不如舍，往吝。','六四：乘馬班如，求婚媾，往吉，無不利。','九五：屯其膏，小貞吉，大貞凶。','上六：乘馬班如，泣血漣如。'],visual:'雷水交錯，暴風雨前的混沌，卻蘊藏突破的能量。',wuxing:'上水下木',wxrel:'水生木（相生）'},
+  {id:4,soul:'不知道，才是學習的開始。',fullname:'山水蒙',name:'蒙',upper:'艮（山）',lower:'坎（水）',nature:'啟蒙、求知、教化、童稚',judgment:'蒙：亨。匪我求童蒙，童蒙求我，初筮告，再三瀆，瀆則不告，利貞。',tuan:'蒙，山下有險，險而止，蒙。蒙亨，以亨行時中也。匪我求童蒙，童蒙求我，志應也。初筮告，以剛中也。再三瀆，瀆則不告，瀆蒙也。蒙以養正，聖功也。',image:'山下出泉，蒙，君子以果行育德。',yaoci:['初六：發蒙，利用刑人，用說桎梏，以往吝。','九二：包蒙吉，納婦吉，子克家。','六三：勿用取女，見金夫，不有躬，無攸利。','六四：困蒙，吝。','六五：童蒙，吉。','上九：擊蒙，不利為寇，利禦寇。'],visual:'山腳泉水初湧，模糊充滿好奇，是所有學習的起點。',wuxing:'上土下水',wxrel:'土剋水（相剋）'},
+  {id:5,soul:'雲在天上，雨還沒下。',fullname:'水天需',name:'需',upper:'坎（水）',lower:'乾（天）',nature:'等待、時機、飲食、誠信',judgment:'需：有孚，光亨，貞吉，利涉大川。',tuan:'需，須也，險在前也。剛健而不陷，其義不困窮矣。需，有孚，光亨，貞吉，位乎天位，以正中也。利涉大川，往有功也。',image:'雲上於天，需，君子以飲食宴樂。',yaoci:['初九：需于郊，利用恆，無咎。','九二：需于沙，小有言，終吉。','九三：需于泥，致寇至。','六四：需于血，出自穴。','九五：需于酒食，貞吉。','上六：入于穴，有不速之客三人來，敬之終吉。'],visual:'天上密雲未雨，天空與水的張力，等待之中的積聚。',wuxing:'上水下金',wxrel:'金生水（相生）'},
+  {id:6,soul:'爭的不是對錯，是誰先退一步。',fullname:'天水訟',name:'訟',upper:'乾（天）',lower:'坎（水）',nature:'爭訟、謹慎、中道、不和',judgment:'訟：有孚，窒惕，中吉，終凶，利見大人，不利涉大川。',tuan:'訟，上剛下險，險而健，訟。訟有孚，窒惕，中吉，剛來而得中也。終凶，訟不可成也。利見大人，尚中正也。不利涉大川，入于淵也。',image:'天與水違行，訟，君子以作事謀始。',yaoci:['初六：不永所事，小有言，終吉。','九二：不克訟，歸而逋，其邑人三百戶，無眚。','六三：食舊德，貞厲，終吉，或從王事，無成。','九四：不克訟，復即命，渝安貞，吉。','九五：訟，元吉。','上九：或錫之鞶帶，終朝三褫之。'],visual:'天與水背道而馳，剛柔相衝，謀定而後動的警示。',wuxing:'上金下水',wxrel:'金生水（相生）'},
+  {id:7,soul:'一個人的力量，來自他背後的人。',fullname:'地水師',name:'師',upper:'坤（地）',lower:'坎（水）',nature:'統御、紀律、民心、出師',judgment:'師：貞，丈人，吉，無咎。',tuan:'師，眾也，貞，正也，能以眾正，可以王矣。剛中而應，行險而順，以此毒天下，而民從之，吉又何咎矣。',image:'地中有水，師，君子以容民畜眾。',yaoci:['初六：師出以律，否臧凶。','九二：在師中，吉，無咎，王三錫命。','六三：師或輿尸，凶。','六四：師左次，無咎。','六五：田有禽，利執言，無咎，長子帥師，弟子輿尸，貞凶。','上六：大君有命，開國承家，小人勿用。'],visual:'大地之下潛流的力量，軍師運籌帷幄，厚積待時。',wuxing:'上土下水',wxrel:'土剋水（相剋）'},
+  {id:8,soul:'靠近，是因為彼此需要。',fullname:'水地比',name:'比',upper:'坎（水）',lower:'坤（地）',nature:'親附、協作、凝聚、聯盟',judgment:'比：吉，原筮，元永貞，無咎，不寧方來，後夫凶。',tuan:'比，吉也，比，輔也，下順從也。原筮，元永貞，無咎，以剛中也。不寧方來，上下應也。後夫凶，其道窮也。',image:'地上有水，比，先王以建萬國，親諸侯。',yaoci:['初六：有孚比之，無咎，有孚盈缶，終來有它吉。','六二：比之自內，貞吉。','六三：比之匪人。','六四：外比之，貞吉。','九五：顯比，王用三驅，失前禽，邑人不誡，吉。','上六：比之無首，凶。'],visual:'水流依附大地，眾人相親相扶，溫柔的凝聚力量。',wuxing:'上水下土',wxrel:'土剋水（相剋）'},
+  {id:9,soul:'風輕輕吹，雨還在遠處。',fullname:'風天小畜',name:'小畜',upper:'巽（風）',lower:'乾（天）',nature:'蓄積、等待、柔制剛、小成',judgment:'小畜：亨，密雲不雨，自我西郊。',tuan:'小畜，柔得位而上下應之，曰小畜。健而巽，剛中而志行，乃亨。密雲不雨，尚往也。自我西郊，施未行也。',image:'風行天上，小畜，君子以懿文德。',yaoci:['初九：復自道，何其咎，吉。','九二：牽復，吉。','九三：輿說輻，夫妻反目。','六四：有孚，血去惕出，無咎。','九五：有孚攣如，富以其鄰。','上九：既雨既處，尚德載，婦貞厲，月幾望，君子征凶。'],visual:'風輕拂天際，密雲聚而未散，以柔克剛蓄而待發。',wuxing:'上木下金',wxrel:'金剋木（相剋）'},
+  {id:10,soul:'踩著虎尾走路，每一步都要清醒。',fullname:'天澤履',name:'履',upper:'乾（天）',lower:'兌（澤）',nature:'謹慎、禮節、步履、處世',judgment:'履虎尾，不咥人，亨。',tuan:'履，柔履剛也。說而應乎乾，是以履虎尾，不咥人，亨。剛中正，履帝位而不疚，光明也。',image:'上天下澤，履，君子以辨上下，定民志。',yaoci:['初九：素履往，無咎。','九二：履道坦坦，幽人貞吉。','六三：眇能視，跛能履，履虎尾，咥人，凶，武人為于大君。','九四：履虎尾，愬愬終吉。','九五：夬履，貞厲。','上九：視履考祥，其旋元吉。'],visual:'天高澤低，步步為營如踩虎尾，謙遜有禮方能安然。',wuxing:'上金下金',wxrel:'比和（同氣）'},
+  {id:11,soul:'天地交流，萬物因此生長。',fullname:'地天泰',name:'泰',upper:'坤（地）',lower:'乾（天）',nature:'通達、和諧、交流、興旺',judgment:'泰：小往大來，吉，亨。',tuan:'泰，小往大來，吉亨，則是天地交而萬物通也，上下交而其志同也。內陽而外陰，內健而外順，內君子而外小人，君子道長，小人道消也。',image:'天地交，泰，后以財成天地之道，輔相天地之宜，以左右民。',yaoci:['初九：拔茅茹，以其彙，征吉。','九二：包荒，用馮河，不遐遺，朋亡，得尚于中行。','九三：無平不陂，無往不復，艱貞無咎，勿恤其孚，于食有福。','六四：翩翩不富，以其鄰不戒以孚。','六五：帝乙歸妹，以祉元吉。','上六：城復于隍，勿用師，自邑告命，貞吝。'],visual:'天地相交融，陰陽流通無阻，萬物在和諧中生長。',wuxing:'上土下金',wxrel:'土生金（相生）'},
+  {id:12,soul:'天地不說話，各自走各自的路。',fullname:'天地否',name:'否',upper:'乾（天）',lower:'坤（地）',nature:'閉塞、退守、隱忍、小人道長',judgment:'否之匪人，不利君子貞，大往小來。',tuan:'否之匪人，不利君子貞，大往小來，則是天地不交而萬物不通也，上下不交而天下無邦也。內陰而外陽，內柔而外剛，內小人而外君子，小人道長，君子道消也。',image:'天地不交，否，君子以儉德辟難，不可榮以祿。',yaoci:['初六：拔茅茹，以其彙，貞吉，亨。','六二：包承，小人吉，大人否亨。','六三：包羞。','九四：有命無咎，疇離祉。','九五：休否，大人吉，其亡其亡，繫于苞桑。','上九：傾否，先否後喜。'],visual:'天地分離各自封閉，此刻應守靜待變，暫收鋒芒。',wuxing:'上金下土',wxrel:'土生金（相生）'},
+  {id:13,soul:'志同道合的人，曠野裡也不孤單。',fullname:'天火同人',name:'同人',upper:'乾（天）',lower:'離（火）',nature:'合群、公正、志同道合、協作',judgment:'同人于野，亨，利涉大川，利君子貞。',tuan:'同人，柔得位得中，而應乎乾，曰同人。同人曰，同人于野亨，利涉大川，乾行也。文明以健，中正而應，君子正也。唯君子為能通天下之志。',image:'天與火，同人，君子以類族辨物。',yaoci:['初九：同人于門，無咎。','六二：同人于宗，吝。','九三：伏戎于莽，升其高陵，三歲不興。','九四：乘其墉，弗克攻，吉。','九五：同人，先號咷而後笑，大師克相遇。','上九：同人于郊，無悔。'],visual:'天火同明，志同道合之人聚於曠野，開闊無私的胸懷。',wuxing:'上金下火',wxrel:'火剋金（相剋）'},
+  {id:14,soul:'光照四方，但要守住自己的重量。',fullname:'火天大有',name:'大有',upper:'離（火）',lower:'乾（天）',nature:'豐盛、光明、謙遜自持、大成',judgment:'大有：元亨。',tuan:'大有，柔得尊位，大中而上下應之，曰大有。其德剛健而文明，應乎天而時行，是以元亨。',image:'火在天上，大有，君子以遏惡揚善，順天休命。',yaoci:['初九：無交害，匪咎，艱則無咎。','九二：大車以載，有攸往，無咎。','九三：公用亨于天子，小人弗克。','九四：匪其彭，無咎。','六五：厥孚交如，威如，吉。','上九：自天祐之，吉無不利。'],visual:'烈火高懸天際普照四方，豐盛之時更需謙遜自持。',wuxing:'上火下金',wxrel:'火剋金（相剋）'},
+  {id:15,soul:'山藏在地底下，越深越有力量。',fullname:'地山謙',name:'謙',upper:'坤（地）',lower:'艮（山）',nature:'謙遜、平衡、自省、有終',judgment:'謙：亨，君子有終。',tuan:'謙，亨，天道下濟而光明，地道卑而上行。天道虧盈而益謙，地道變盈而流謙，鬼神害盈而福謙，人道惡盈而好謙。謙尊而光，卑而不可踰，君子之終也。',image:'地中有山，謙，君子以裒多益寡，稱物平施。',yaoci:['初六：謙謙君子，用涉大川，吉。','六二：鳴謙，貞吉。','九三：勞謙君子，有終吉。','六四：無不利，撝謙。','六五：不富，以其鄰，利用侵伐，無不利。','上六：鳴謙，利用行師，征邑國。'],visual:'高山隱於大地之下，越高越深藏，謙遜是最大的力量。',wuxing:'上土下土',wxrel:'比和（同氣）'},
+  {id:16,soul:'雷從地底升起，萬物都感應到了。',fullname:'雷地豫',name:'豫',upper:'震（雷）',lower:'坤（地）',nature:'順和、喜樂、預備、振奮',judgment:'豫：利建侯行師。',tuan:'豫，剛應而志行，順以動，豫。豫順以動，故天地如之，而況建侯行師乎？天地以順動，故日月不過，而四時不忒；聖人以順動，則刑罰清而民服。豫之時義大矣哉！',image:'雷出地奮，豫，先王以作樂崇德，殷薦之上帝，以配祖考。',yaoci:['初六：鳴豫，凶。','六二：介于石，不終日，貞吉。','六三：盱豫悔，遲有悔。','九四：由豫，大有得，勿疑，朋盍簪。','六五：貞疾，恆不死。','上六：冥豫，成有渝，無咎。'],visual:'春雷破土，萬物振奮，喜悅從大地深處升起的節慶之象。',wuxing:'上木下土',wxrel:'木剋土（相剋）'},
+  {id:17,soul:'水跟著地形走，方向自然就出來了。',fullname:'澤雷隨',name:'隨',upper:'兌（澤）',lower:'震（雷）',nature:'順應、靈活、跟從、適時',judgment:'隨：元，亨，利，貞，無咎。',tuan:'隨，剛來而下柔，動而說，隨。大亨貞無咎，而天下隨時，隨時之義大矣哉！',image:'澤中有雷，隨，君子以嚮晦入宴息。',yaoci:['初九：官有渝，貞吉，出門交有功。','六二：係小子，失丈夫。','六三：係丈夫，失小子，隨有求得，利居貞。','九四：隨有獲，貞凶，有孚在道，以明何咎。','九五：孚于嘉，吉。','上六：拘係之，乃從維之，王用亨于西山。'],visual:'澤水隨雷動，柔順而不失方向，順勢而為的智慧。',wuxing:'上金下木',wxrel:'金剋木（相剋）'},
+  {id:18,soul:'舊的腐掉，才有新的空間長出來。',fullname:'山風蠱',name:'蠱',upper:'艮（山）',lower:'巽（風）',nature:'整治、革新、擔當、除弊',judgment:'蠱：元亨，利涉大川，先甲三日，後甲三日。',tuan:'蠱，剛上而柔下，巽而止，蠱。蠱元亨，而天下治也。利涉大川，往有事也。先甲三日，後甲三日，終則有始，天行也。',image:'山下有風，蠱，君子以振民育德。',yaoci:['初六：幹父之蠱，有子，考無咎，厲終吉。','九二：幹母之蠱，不可貞。','九三：幹父之蠱，小有悔，無大咎。','六四：裕父之蠱，往見吝。','六五：幹父之蠱，用譽。','上九：不事王侯，高尚其事。'],visual:'山腳下的風侵蝕舊有結構，破而後立的轉化契機。',wuxing:'上土下木',wxrel:'木剋土（相剋）'},
+  {id:19,soul:'走近，是為了看清楚。',fullname:'地澤臨',name:'臨',upper:'坤（地）',lower:'兌（澤）',nature:'親臨、監督、進展、管理',judgment:'臨：元，亨，利，貞，至于八月有凶。',tuan:'臨，剛浸而長，說而順，剛中而應。大亨以正，天之道也。至于八月有凶，消不久也。',image:'澤上有地，臨，君子以教思無窮，容保民無疆。',yaoci:['初九：咸臨，貞吉。','九二：咸臨，吉，無不利。','六三：甘臨，無攸利，既憂之，無咎。','六四：至臨，無咎。','六五：知臨，大君之宜，吉。','上六：敦臨，吉，無咎。'],visual:'大地俯視澤水，高處親臨低處，領導者的視野與責任。',wuxing:'上土下金',wxrel:'土生金（相生）'},
+  {id:20,soul:'站得高，不是為了俯視，是為了看遠。',fullname:'風地觀',name:'觀',upper:'巽（風）',lower:'坤（地）',nature:'觀察、示範、反思、影響',judgment:'觀：盥而不薦，有孚顒若。',tuan:'大觀在上，順而巽，中正以觀天下。觀，盥而不薦，有孚顒若，下觀而化也。觀天之神道，而四時不忒，聖人以神道設教，而天下服矣。',image:'風行地上，觀，先王以省方觀民設教。',yaoci:['初六：童觀，小人無咎，君子吝。','六二：闚觀，利女貞。','六三：觀我生，進退。','六四：觀國之光，利用賓于王。','九五：觀我生，君子無咎。','上九：觀其生，君子無咎。'],visual:'風輕掠過大地，觀察者靜默如風，以身作則無言而化。',wuxing:'上木下土',wxrel:'木剋土（相剋）'},
+  {id:21,soul:'咬開障礙，不能手軟。',fullname:'火雷噬嗑',name:'噬嗑',upper:'離（火）',lower:'震（雷）',nature:'決斷、執法、排難、咬合',judgment:'噬嗑：亨，利用獄。',tuan:'頤中有物，曰噬嗑，噬嗑而亨。剛柔分，動而明，雷電合而章。柔得中而上行，雖不當位，利用獄也。',image:'雷電，噬嗑，先王以明罰敕法。',yaoci:['初九：屨校滅趾，無咎。','六二：噬膚，滅鼻，無咎。','六三：噬腊肉，遇毒，小吝，無咎。','九四：噬乾胏，得金矢，利艱貞，吉。','六五：噬乾肉，得黃金，貞厲，無咎。','上九：何校滅耳，凶。'],visual:'雷電交加，果斷咬破障礙，清明的決斷如電光石火。',wuxing:'上火下木',wxrel:'木生火（相生）'},
+  {id:22,soul:'裝點得再美，本質才是最後留下的。',fullname:'山火賁',name:'賁',upper:'艮（山）',lower:'離（火）',nature:'文飾、質樸、適度、美化',judgment:'賁：亨，小利有攸往。',tuan:'賁，亨，柔來而文剛，故亨，分剛上而文柔，故小利有攸往，天文也。文明以止，人文也。觀乎天文，以察時變，觀乎人文，以化成天下。',image:'山下有火，賁，君子以明庶政，無敢折獄。',yaoci:['初九：賁其趾，舍車而徒。','六二：賁其須。','九三：賁如濡如，永貞吉。','六四：賁如皤如，白馬翰如，匪寇，婚媾。','六五：賁于丘園，束帛戔戔，吝，終吉。','上九：白賁，無咎。'],visual:'山腳火光映照，裝點而不失本質，美麗在於恰到好處。',wuxing:'上土下火',wxrel:'火生土（相生）'},
+  {id:23,soul:'剝落，是為了讓真正的東西留下來。',fullname:'山地剝',name:'剝',upper:'艮（山）',lower:'坤（地）',nature:'剝落、消損、靜待、小人得勢',judgment:'剝：不利有攸往。',tuan:'剝，剝也，柔變剛也。不利有攸往，小人長也。順而止之，觀象也。君子尚消息盈虛，天行也。',image:'山附于地，剝，上以厚下安宅。',yaoci:['初六：剝床以足，蔑貞凶。','六二：剝床以辨，蔑貞凶。','六三：剝之，無咎。','六四：剝床以膚，凶。','六五：貫魚，以宮人寵，無不利。','上九：碩果不食，君子得輿，小人剝廬。'],visual:'山體漸漸剝落歸於大地，消損之中有厚積，靜待復甦。',wuxing:'上土下土',wxrel:'比和（同氣）'},
+  {id:24,soul:'冬天的地底，一陽已經回來了。',fullname:'地雷復',name:'復',upper:'坤（地）',lower:'震（雷）',nature:'回歸、更新、生機、一陽來復',judgment:'復：亨，出入無疾，朋來無咎，反復其道，七日來復，利有攸往。',tuan:'復，亨，剛反，動而以順行，是以出入無疾，朋來無咎。反復其道，七日來復，天行也。利有攸往，剛長也。復其見天地之心乎？',image:'雷在地中，復，先王以至日閉關，商旅不行，后不省方。',yaoci:['初九：不遠復，無祇悔，元吉。','六二：休復，吉。','六三：頻復，厲無咎。','六四：中行獨復。','六五：敦復，無悔。','上六：迷復，凶，有災眚。'],visual:'冬雷潛於地底，一陽初動，萬物在靜默中準備重生。',wuxing:'上土下木',wxrel:'木剋土（相剋）'},
+  {id:25,soul:'純粹地走，不帶任何算計。',fullname:'天雷无妄',name:'無妄',upper:'乾（天）',lower:'震（雷）',nature:'純真、自然、順天、誠正',judgment:'無妄：元，亨，利，貞，其匪正有眚，不利有攸往。',tuan:'無妄，剛自外來，而為主于內，動而健，剛中而應，大亨以正，天之命也。其匪正有眚，不利有攸往，無妄之往，何之矣？天命不祐，行矣哉？',image:'天下雷行，物與無妄，先王以茂對時，育萬物。',yaoci:['初九：無妄，往吉。','六二：不耕穫，不菑畬，則利有攸往。','六三：無妄之災，或係之牛，行人之得，邑人之災。','九四：可貞，無咎。','九五：無妄之疾，勿藥有喜。','上九：無妄，行有眚，無攸利。'],visual:'雷行天下，純粹而無偽，萬物回歸本真狀態。',wuxing:'上金下木',wxrel:'金剋木（相剋）'},
+  {id:26,soul:'山裡藏著天，能量深不可測。',fullname:'山天大畜',name:'大畜',upper:'艮（山）',lower:'乾（天）',nature:'積蓄、蘊藏、厚實、大成',judgment:'大畜：利貞，不家食吉，利涉大川。',tuan:'大畜，剛健，篤實，輝光，日新其德，剛上而尚賢，能止健，大正也。不家食吉，養賢也。利涉大川，應乎天也。',image:'天在山中，大畜，君子以多識前言往行，以畜其德。',yaoci:['初九：有厲，利已。','九二：輿說輹。','九三：良馬逐，利艱貞，曰閑輿衛，利有攸往。','六四：童牛之牿，元吉。','六五：豶豕之牙，吉。','上九：何天之衢，亨。'],visual:'天藏於山中，巨大能量深埋蓄積，厚積薄發的大格局。',wuxing:'上土下金',wxrel:'土生金（相生）'},
+  {id:27,soul:'吃什麼，說什麼，你就成為什麼。',fullname:'山雷頤',name:'頤',upper:'艮（山）',lower:'震（雷）',nature:'頤養、慎言、節制、滋養',judgment:'頤：貞吉，觀頤，自求口實。',tuan:'頤，貞吉，養正則吉也。觀頤，觀其所養也。自求口實，觀其自養也。天地養萬物，聖人養賢以及萬民，頤之時大矣哉！',image:'山下有雷，頤，君子以慎言語，節飲食。',yaoci:['初九：舍爾靈龜，觀我朵頤，凶。','六二：顛頤，拂經，于丘頤，征凶。','六三：拂頤，貞凶，十年勿用，無攸利。','六四：顛頤吉，虎視眈眈，其欲逐逐，無咎。','六五：拂經，居貞吉，不可涉大川。','上九：由頤，厲吉，利涉大川。'],visual:'山下雷動如咀嚼，提醒食物與言語都需節制滋養。',wuxing:'上土下木',wxrel:'木剋土（相剋）'},
+  {id:28,soul:'棟樑承著重量，但它還撐著。',fullname:'澤風大過',name:'大過',upper:'兌（澤）',lower:'巽（風）',nature:'過重、擔當、應變、獨立',judgment:'大過：棟橈，利有攸往，亨。',tuan:'大過，大者過也。棟橈，本末弱也。剛過而中，巽而說行，利有攸往，乃亨。大過之時大矣哉！',image:'澤滅木，大過，君子以獨立不懼，遯世無悶。',yaoci:['初六：藉用白茅，無咎。','九二：枯楊生稊，老夫得其女妻，無不利。','九三：棟橈，凶。','九四：棟隆，吉，有它吝。','九五：枯楊生華，老婦得其士夫，無咎無譽。','上六：過涉滅頂，凶，無咎。'],visual:'澤水漫過樹木，棟樑承壓，危機之中彰顯擔當的勇氣。',wuxing:'上金下木',wxrel:'金剋木（相剋）'},
+  {id:29,soul:'水流從不因為石頭停下來。',fullname:'坎為水',name:'坎',upper:'坎（水）',lower:'坎（水）',nature:'險難、誠心、習練、水流不止',judgment:'習坎：有孚，維心亨，行有尚。',tuan:'習坎，重險也。水流而不盈，行險而不失其信，維心亨，乃以剛中也。行有尚，往有功也。天險不可升也，地險山川丘陵也，王公設險以守其國，險之時用大矣哉！',image:'水洊至，習坎，君子以常德行，習教事。',yaoci:['初六：習坎，入于坎窞，凶。','九二：坎有險，求小得。','六三：來之坎坎，險且枕，入于坎窞，勿用。','六四：樽酒，簋貳，用缶，納約自牖，終無咎。','九五：坎不盈，祗既平，無咎。','上六：係用徽纆，寘于叢棘，三歲不得，凶。'],visual:'險水重重，但水流從不因阻礙停止，誠心自能穿石。',wuxing:'上水下水',wxrel:'比和（同氣）'},
+  {id:30,soul:'火依附著什麼燃燒，光就往哪裡照。',fullname:'離為火',name:'離',upper:'離（火）',lower:'離（火）',nature:'光明、依附、文明、才華',judgment:'離：利貞，亨，畜牝牛，吉。',tuan:'離，麗也。日月麗乎天，百穀草木麗乎土，重明以麗乎正，乃化成天下。柔麗乎中正，故亨，是以畜牝牛吉也。',image:'明兩作，離，大人以繼明照于四方。',yaoci:['初九：履錯然，敬之無咎。','六二：黃離，元吉。','九三：日昃之離，不鼓缶而歌，則大耋之嗟，凶。','九四：突如其來如，焚如，死如，棄如。','六五：出涕沱若，戚嗟若，吉。','上九：王用出征，有嘉折首，獲匪其醜，無咎。'],visual:'雙火相輝，依附而燃，光明需要依托，智慧需要載體。',wuxing:'上火下火',wxrel:'比和（同氣）'},
+  {id:31,soul:'兩種能量相遇，感應就發生了。',fullname:'澤山咸',name:'咸',upper:'兌（澤）',lower:'艮（山）',nature:'感應、交流、相悅、婚戀',judgment:'咸：亨，利貞，取女吉。',tuan:'咸，感也。柔上而剛下，二氣感應以相與，止而說，男下女，是以亨利貞，取女吉也。天地感而萬物化生，聖人感人心而天下和平，觀其所感，而天地萬物之情可見矣！',image:'山上有澤，咸，君子以虛受人。',yaoci:['初六：咸其拇。','六二：咸其腓，凶，居吉。','九三：咸其股，執其隨，往吝。','九四：貞吉悔亡，憧憧往來，朋從爾思。','九五：咸其脢，無悔。','上六：咸其輔頰舌。'],visual:'澤水依附山頂，山澤互通，感應是最深邃的交流方式。',wuxing:'上金下土',wxrel:'土生金（相生）'},
+  {id:32,soul:'雷和風，各走各的，但從不分開。',fullname:'雷風恒',name:'恒',upper:'震（雷）',lower:'巽（風）',nature:'恆久、堅持、不變、持正',judgment:'恒：亨，無咎，利貞，利有攸往。',tuan:'恒，久也。剛上而柔下，雷風相與，巽而動，剛柔皆應，恒。恒亨，無咎，利貞，久于其道也。天地之道，恒久而不已也。利有攸往，終則有始也。日月得天，而能久照，四時變化，而能久成，聖人久于其道，而天下化成。',image:'雷風，恒，君子以立不易方。',yaoci:['初六：浚恒，貞凶，無攸利。','九二：悔亡。','九三：不恒其德，或承之羞，貞吝。','九四：田無禽。','六五：恒其德，貞，婦人吉，夫子凶。','上六：振恒，凶。'],visual:'雷風相伴而行，各持其位，恆久不變的是內心的方向。',wuxing:'上木下木',wxrel:'比和（同氣）'},
+  {id:33,soul:'退，是為了不在錯的地方耗盡自己。',fullname:'天山遯',name:'遯',upper:'乾（天）',lower:'艮（山）',nature:'退隱、保全、靜待、知退',judgment:'遯：亨，小利貞。',tuan:'遯，亨，遯而亨也。剛當位而應，與時行也。小利貞，浸而長也。遯之時義大矣哉！',image:'天下有山，遯，君子以遠小人，不惡而嚴。',yaoci:['初六：遯尾，厲，勿用有攸往。','六二：執之用黃牛之革，莫之勝說。','九三：係遯，有疾厲，畜臣妾吉。','九四：好遯，君子吉，小人否。','九五：嘉遯，貞吉。','上九：肥遯，無不利。'],visual:'天高山靜，退而不敗，知道何時後退是真正的智慧。',wuxing:'上金下土',wxrel:'土生金（相生）'},
+  {id:34,soul:'壯，但要知道禮義在哪裡。',fullname:'雷天大壯',name:'大壯',upper:'震（雷）',lower:'乾（天）',nature:'剛壯、進取、慎行、正大',judgment:'大壯：利貞。',tuan:'大壯，大者壯也。剛以動，故壯。大壯利貞，大者正也。正大而天地之情可見矣！',image:'雷在天上，大壯，君子以非禮弗履。',yaoci:['初九：壯于趾，征凶，有孚。','九二：貞吉。','九三：小人用壯，君子用罔，貞厲，羝羊觸藩，羸其角。','九四：貞吉悔亡，藩決不羸，壯于大輿之輹。','六五：喪羊于易，無悔。','上六：羝羊觸藩，不能退，不能遂，無攸利，艱則吉。'],visual:'雷轟天際，剛壯之勢如日中天，但禮義才是真正力量。',wuxing:'上木下金',wxrel:'金剋木（相剋）'},
+  {id:35,soul:'太陽從地面升起，沒有什麼能擋住它。',fullname:'火地晉',name:'晉',upper:'離（火）',lower:'坤（地）',nature:'晉升、前進、光明、自昭',judgment:'晉：康侯用錫馬蕃庶，晝日三接。',tuan:'晉，進也。明出地上，順而麗乎大明，柔進而上行，是以康侯用錫馬蕃庶，晝日三接也。',image:'明出地上，晉，君子以自昭明德。',yaoci:['初六：晉如，摧如，貞吉，罔孚，裕無咎。','六二：晉如，愁如，貞吉，受茲介福，于其王母。','六三：眾允，悔亡。','九四：晉如鼫鼠，貞厲。','六五：悔亡，失得勿恤，往吉無不利。','上九：晉其角，維用伐邑，厲吉無咎，貞吝。'],visual:'太陽從大地升起，光明自然顯現，晉升之路清晰可見。',wuxing:'上火下土',wxrel:'火生土（相生）'},
+  {id:36,soul:'光藏進地底，不是消失，是在等待。',fullname:'地火明夷',name:'明夷',upper:'坤（地）',lower:'離（火）',nature:'潛藏、忍耐、蓄勢、處晦',judgment:'明夷：利艱貞。',tuan:'明入地中，明夷。內文明而外柔順，以蒙大難，文王以之。利艱貞，晦其明也，內難而能正其志，箕子以之。',image:'明入地中，明夷，君子以蒞眾用晦而明。',yaoci:['初九：明夷于飛，垂其翼，君子于行，三日不食，有攸往，主人有言。','六二：明夷，夷于左股，用拯馬壯，吉。','九三：明夷于南狩，得其大首，不可疾貞。','六四：入于左腹，獲明夷之心，于出門庭。','六五：箕子之明夷，利貞。','上六：不明，晦，初登于天，後入于地。'],visual:'太陽沒入大地，黑暗中保護光明，以晦藏明的深沉智慧。',wuxing:'上土下火',wxrel:'火生土（相生）'},
+  {id:37,soul:'家的秩序，從每個人守住自己的位置開始。',fullname:'風火家人',name:'家人',upper:'巽（風）',lower:'離（火）',nature:'家道、秩序、各守其位、親情',judgment:'家人：利女貞。',tuan:'家人，女正位乎內，男正位乎外，男女正，天地之大義也。家人有嚴君焉，父母之謂也。父父，子子，兄兄，弟弟，夫夫，婦婦，而家道正。正家而天下定矣。',image:'風自火出，家人，君子以言有物而行有恆。',yaoci:['初九：閑有家，悔亡。','六二：無攸遂，在中饋，貞吉。','九三：家人嗃嗃，悔厲吉，婦子嘻嘻，終吝。','六四：富家，大吉。','九五：王假有家，勿恤，吉。','上九：有孚威如，終吉。'],visual:'風從火中升起，溫暖流通，家的秩序如風與火的相生。',wuxing:'上木下火',wxrel:'木生火（相生）'},
+  {id:38,soul:'背道而馳，卻在某個地方相遇。',fullname:'火澤睽',name:'睽',upper:'離（火）',lower:'兌（澤）',nature:'乖違、差異、求同存異、小事吉',judgment:'睽：小事吉。',tuan:'睽，火動而上，澤動而下，二女同居，其志不同行。說而麗乎明，柔進而上行，得中而應乎剛，是以小事吉。天地睽而其事同也，男女睽而其志通也，萬物睽而其事類也，睽之時用大矣哉！',image:'上火下澤，睽，君子以同而異。',yaoci:['初九：悔亡，喪馬勿逐，自復，見惡人無咎。','九二：遇主于巷，無咎。','六三：見輿曳，其牛掣，其人天且劓，無初有終。','九四：睽孤，遇元夫，交孚，厲無咎。','六五：悔亡，厥宗噬膚，往何咎？','上九：睽孤，見豕負塗，載鬼一車，先張之弧，後說之弧，匪寇婚媾，往遇雨則吉。'],visual:'火向上燃，澤向下流，背道而馳中求得和諧共存之道。',wuxing:'上火下金',wxrel:'火剋金（相剋）'},
+  {id:39,soul:'路難走，先回頭看看自己。',fullname:'水山蹇',name:'蹇',upper:'坎（水）',lower:'艮（山）',nature:'艱阻、迂迴、求援、反思',judgment:'蹇：利西南，不利東北，利見大人，貞吉。',tuan:'蹇，難也，險在前也。見險而能止，知矣哉！蹇，利西南，往得中也。不利東北，其道窮也。利見大人，往有功也。當位貞吉，以正邦也。蹇之時用大矣哉！',image:'山上有水，蹇，君子以反身修德。',yaoci:['初六：往蹇，來譽。','六二：王臣蹇蹇，匪躬之故。','九三：往蹇，來反。','六四：往蹇，來連。','九五：大蹇，朋來。','上六：往蹇，來碩，吉，利見大人。'],visual:'山上積水成阻，舉步維艱，此時回頭反思比強行更智慧。',wuxing:'上水下土',wxrel:'土剋水（相剋）'},
+  {id:40,soul:'雷雨過後，天地都鬆了一口氣。',fullname:'雷水解',name:'解',upper:'震（雷）',lower:'坎（水）',nature:'解困、舒展、寬仁、化解',judgment:'解：利西南，無所往，其來復吉，有攸往，夙吉。',tuan:'解，險以動，動而免乎險，解。解，利西南，往得眾也。其來復吉，乃得中也。有攸往夙吉，往有功也。天地解而雷雨作，雷雨作而百果草木皆甲坼，解之時大矣哉！',image:'雷雨作，解，君子以赦過宥罪。',yaoci:['初六：無咎。','九二：田獲三狐，得黃矢，貞吉。','六三：負且乘，致寇至，貞吝。','九四：解而拇，朋至斯孚。','六五：君子維有解，吉，有孚于小人。','上六：公用射隼，于高墉之上，獲之，無不利。'],visual:'雷雨過後天地清明，困局得解，萬物重新舒展開來。',wuxing:'上木下水',wxrel:'水生木（相生）'},
+  {id:41,soul:'給出去，不是失去，是換一種形式回來。',fullname:'山澤損',name:'損',upper:'艮（山）',lower:'兌（澤）',nature:'節制、奉獻、捨得、減損增益',judgment:'損：有孚，元吉，無咎，可貞，利有攸往，曷之用，二簋可用享。',tuan:'損，損下益上，其道上行。損而有孚，元吉，無咎，可貞，利有攸往，曷之用，二簋可用享，二簋應有時，損剛益柔有時，損益盈虛，與時偕行。',image:'山下有澤，損，君子以懲忿窒欲。',yaoci:['初九：已事遄往，無咎，酌損之。','九二：利貞，征凶，弗損益之。','六三：三人行，則損一人，一人行，則得其友。','六四：損其疾，使遄有喜，無咎。','六五：或益之十朋之龜，弗克違，元吉。','上九：弗損益之，無咎，貞吉，利有攸往，得臣無家。'],visual:'山腳澤水，以低養高，捨得之間蘊藏更深的增益之道。',wuxing:'上土下金',wxrel:'土生金（相生）'},
+  {id:42,soul:'風和雷一起來，增益的力量最大。',fullname:'風雷益',name:'益',upper:'巽（風）',lower:'震（雷）',nature:'增益、助長、利人、風雷共振',judgment:'益：利有攸往，利涉大川。',tuan:'益，損上益下，民說無疆，自上下下，其道大光。利有攸往，中正有慶。利涉大川，木道乃行。益動而巽，日進無疆，天施地生，其益無方。凡益之道，與時偕行。',image:'風雷，益，君子以見善則遷，有過則改。',yaoci:['初九：利用為大作，元吉，無咎。','六二：或益之十朋之龜，弗克違，永貞吉，王用享于帝，吉。','六三：益之用凶事，無咎，有孚中行，告公用圭。','六四：中行告公從，利用為依遷國。','九五：有孚惠心，勿問元吉，有孚惠我德。','上九：莫益之，或擊之，立心勿恒，凶。'],visual:'風雷交加，天地共振，增益是施予者與受益者的雙贏。',wuxing:'上木下木',wxrel:'比和（同氣）'},
+  {id:43,soul:'決斷，不是衝動，是清醒之後的果斷。',fullname:'澤天夬',name:'夬',upper:'兌（澤）',lower:'乾（天）',nature:'決斷、清除、剛明、揚于王庭',judgment:'夬：揚于王庭，孚號有厲，告自邑，不利即戎，利有攸往。',tuan:'夬，決也，剛決柔也。健而說，決而和。揚于王庭，柔乘五剛也。孚號有厲，其危乃光也。告自邑，不利即戎，所尚乃窮也。利有攸往，剛長乃終也。',image:'澤上于天，夬，君子以施祿及下，居德則忌。',yaoci:['初九：壯于前趾，往不勝，為咎。','九二：惕號，莫夜有戎，勿恤。','九三：壯于頄，有凶，君子夬夬，獨行遇雨，若濡有慍，無咎。','九四：臀無膚，其行次且，牽羊悔亡，聞言不信。','九五：莧陸夬夬，中行無咎。','上六：無號，終有凶。'],visual:'澤水高懸天上，決堤之勢，果斷清明方能化解危機。',wuxing:'上金下金',wxrel:'比和（同氣）'},
+  {id:44,soul:'偶然相遇，卻可能改變一切。',fullname:'天風姤',name:'姤',upper:'乾（天）',lower:'巽（風）',nature:'相遇、防微杜漸、警覺、偶然',judgment:'姤：女壯，勿用取女。',tuan:'姤，遇也，柔遇剛也。勿用取女，不可與長也。天地相遇，品物咸章也。剛遇中正，天下大行也。姤之時義大矣哉！',image:'天下有風，姤，后以施命誥四方。',yaoci:['初六：係于金柅，貞吉，有攸往，見凶，羸豕孚蹢躅。','九二：包有魚，無咎，不利賓。','九三：臀無膚，其行次且，厲，無大咎。','九四：包無魚，起凶。','九五：以杞包瓜，含章，有隕自天。','上九：姤其角，吝，無咎。'],visual:'風從天下吹過，偶然相遇影響深遠，防微杜漸。',wuxing:'上金下木',wxrel:'金剋木（相剋）'},
+  {id:45,soul:'聚在一起，是因為有共同相信的東西。',fullname:'澤地萃',name:'萃',upper:'兌（澤）',lower:'坤（地）',nature:'聚合、凝聚、誠信、大集',judgment:'萃：亨，王假有廟，利見大人，亨，利貞，用大牲吉，利有攸往。',tuan:'萃，聚也，順以說，剛中而應，故聚也。王假有廟，致孝享也。利見大人亨，聚以正也。用大牲吉，利有攸往，順天命也。觀其所聚，而天地萬物之情可見矣。',image:'澤上于地，萃，君子以除戎器，戒不虞。',yaoci:['初六：有孚不終，乃亂乃萃，若號，一握為笑，勿恤，往無咎。','六二：引吉，無咎，孚乃利用禴。','六三：萃如，嗟如，無攸利，往無咎，小吝。','九四：大吉，無咎。','九五：萃有位，無咎，匪孚，元永貞，悔亡。','上六：齎咨涕洟，無咎。'],visual:'澤聚於地，萬水歸一，凝聚的力量來自誠信與共同信念。',wuxing:'上金下土',wxrel:'土生金（相生）'},
+  {id:46,soul:'木從地底慢慢長，一步一步都算數。',fullname:'地風升',name:'升',upper:'坤（地）',lower:'巽（風）',nature:'上升、積累、謙進、循序',judgment:'升：元亨，用見大人，勿恤，南征吉。',tuan:'柔以時升，巽而順，剛中而應，是以大亨。用見大人，勿恤，有慶也。南征吉，志行也。',image:'地中生木，升，君子以順德，積小以高大。',yaoci:['初六：允升，大吉。','九二：孚乃利用禴，無咎。','九三：升虛邑。','六四：王用亨于岐山，吉，無咎。','六五：貞吉，升階。','上六：冥升，利于不息之貞。'],visual:'木從地中破土而出，謙遜積累是上升的根基。',wuxing:'上土下木',wxrel:'木剋土（相剋）'},
+  {id:47,soul:'水退了，但井還在。',fullname:'澤水困',name:'困',upper:'兌（澤）',lower:'坎（水）',nature:'困境、磨礪、守正、言不信',judgment:'困：亨，貞，大人吉，無咎，有言不信。',tuan:'困，剛揜也。險以說，困而不失其所亨，其唯君子乎？貞大人吉，以剛中也。有言不信，尚口乃窮也。',image:'澤無水，困，君子以致命遂志。',yaoci:['初六：臀困于株木，入于幽谷，三歲不覿。','九二：困于酒食，朱紱方來，利用享祀，征凶，無咎。','六三：困于石，據于蒺藜，入于其宮，不見其妻，凶。','九四：來徐徐，困于金車，吝，有終。','九五：劓刖，困于赤紱，乃徐有說，利用祭祀。','上六：困于葛藟，于臲卼，曰動悔，有悔，征吉。'],visual:'澤水枯竭，四面受困，困境磨礪精神，守正才是出路。',wuxing:'上金下水',wxrel:'金生水（相生）'},
+  {id:48,soul:'井不會因為城市搬遷而消失。',fullname:'水風井',name:'井',upper:'坎（水）',lower:'巽（風）',nature:'滋養、恆常、本源、德澤',judgment:'井：改邑不改井，無喪無得，往來井井，汔至亦未繘井，羸其瓶，凶。',tuan:'巽乎水而上水，井。井養而不窮也。改邑不改井，乃以剛中也。汔至亦未繘井，未有功也。羸其瓶，是以凶也。',image:'木上有水，井，君子以勞民勸相。',yaoci:['初六：井泥不食，舊井無禽。','九二：井谷射鮒，甕敝漏。','九三：井渫不食，為我心惻，可用汲，王明，並受其福。','六四：井甃，無咎。','九五：井冽，寒泉食。','上六：井收勿幕，有孚，元吉。'],visual:'深井不竭，默默滋養，根源的力量超越時空恆常存在。',wuxing:'上水下木',wxrel:'水生木（相生）'},
+  {id:49,soul:'虎要換皮了，這一次不一樣。',fullname:'澤火革',name:'革',upper:'兌（澤）',lower:'離（火）',nature:'變革、更新、順勢、時機',judgment:'革：己日乃孚，元亨，利貞，悔亡。',tuan:'革，水火相息，二女同居，其志不相得，曰革。己日乃孚，革而信之。文明以說，大亨以正，革而當，其悔乃亡。天地革而四時成，湯武革命，順乎天而應乎人，革之時大矣哉！',image:'澤中有火，革，君子以治歷明時。',yaoci:['初九：鞏用黃牛之革。','六二：己日乃革之，征吉，無咎。','九三：征凶，貞厲，革言三就，有孚。','九四：悔亡，有孚改命，吉。','九五：大人虎變，未占有孚。','上六：君子豹變，小人革面，征凶，居貞吉。'],visual:'火燃澤中，水火激盪，變革需要時機與勇氣，順勢而為。',wuxing:'上金下火',wxrel:'火剋金（相剋）'},
+  {id:50,soul:'鼎火烹煮，把最好的東西留下來。',fullname:'火風鼎',name:'鼎',upper:'離（火）',lower:'巽（風）',nature:'鼎新、養賢、文明、正位',judgment:'鼎：元吉，亨。',tuan:'鼎，象也。以木巽火，烹飪也。聖人烹以享上帝，而大烹以養聖賢，巽而耳目聰明，柔進而上行，得中而應乎剛，是以元亨。',image:'木上有火，鼎，君子以正位凝命。',yaoci:['初六：鼎顛趾，利出否，得妾以其子，無咎。','九二：鼎有實，我仇有疾，不我能即，吉。','九三：鼎耳革，其行塞，雉膏不食，方雨虧悔，終吉。','九四：鼎折足，覆公餗，其形渥，凶。','六五：鼎黃耳，金鉉，利貞。','上九：鼎玉鉉，大吉，無不利。'],visual:'鼎火烹煮，文明的象徵，以正確的位置承擔重要使命。',wuxing:'上火下木',wxrel:'木生火（相生）'},
+  {id:51,soul:'雷聲震動百里，嚇到的人反而清醒了。',fullname:'震為雷',name:'震',upper:'震（雷）',lower:'震（雷）',nature:'震驚、奮發、警醒、自省',judgment:'震：亨，震來虩虩，笑言啞啞，震驚百里，不喪匕鬯。',tuan:'震，亨。震來虩虩，恐致福也。笑言啞啞，後有則也。震驚百里，驚遠而懼邇也。出可以守宗廟社稷，以為祭主也。',image:'洊雷，震，君子以恐懼修省。',yaoci:['初九：震來虩虩，後笑言啞啞，吉。','六二：震來厲，億喪貝，躋于九陵，勿逐，七日得。','六三：震蘇蘇，震行無眚。','九四：震遂泥。','六五：震往來厲，億無喪，有事。','上六：震索索，視矍矍，征凶，震不于其躬，于其鄰，無咎。'],visual:'雷聲重疊，震驚百里，外在的驚擾是內在覺醒的契機。',wuxing:'上木下木',wxrel:'比和（同氣）'},
+  {id:52,soul:'山靜靜站著，知道自己在哪裡。',fullname:'艮為山',name:'艮',upper:'艮（山）',lower:'艮（山）',nature:'靜止、沉穩、自知、知止',judgment:'艮其背，不獲其身，行其庭，不見其人，無咎。',tuan:'艮，止也。時止則止，時行則行，動靜不失其時，其道光明。艮其止，止其所也。上下敵應，不相與也。是以不獲其身，行其庭不見其人，無咎也。',image:'兼山，艮，君子以思不出其位。',yaoci:['初六：艮其趾，無咎，利永貞。','六二：艮其腓，不拯其隨，其心不快。','九三：艮其限，列其夤，厲熏心。','六四：艮其身，無咎。','六五：艮其輔，言有序，悔亡。','上九：敦艮，吉。'],visual:'山上疊山，靜止如磐，知道自己的位置是最深的智慧。',wuxing:'上土下土',wxrel:'比和（同氣）'},
+  {id:53,soul:'鴻雁一步一步往高處飛，不急。',fullname:'風山漸',name:'漸',upper:'巽（風）',lower:'艮（山）',nature:'漸進、有序、循步、婚嫁',judgment:'漸：女歸吉，利貞。',tuan:'漸之進也，女歸吉也。進得位，往有功也。進以正，可以正邦也。其位，剛得中也。止而巽，動不窮也。',image:'山上有木，漸，君子以居賢德善俗。',yaoci:['初六：鴻漸于干，小子厲，有言，無咎。','六二：鴻漸于磐，飲食衎衎，吉。','九三：鴻漸于陸，夫征不復，婦孕不育，凶，利禦寇。','六四：鴻漸于木，或得其桷，無咎。','九五：鴻漸于陵，婦三歲不孕，終莫之勝，吉。','上九：鴻漸于逵，其羽可用為儀，吉。'],visual:'樹木在山頂緩緩生長，漸進不急，每一步都穩固有力。',wuxing:'上木下土',wxrel:'木剋土（相剋）'},
+  {id:54,soul:'歸宿在哪裡，走的每一步才有方向。',fullname:'雷澤歸妹',name:'歸妹',upper:'震（雷）',lower:'兌（澤）',nature:'歸附、知止、慎終、婚嫁',judgment:'歸妹：征凶，無攸利。',tuan:'歸妹，天地之大義也。天地不交，而萬物不興，歸妹人之終始也。說以動，所歸妹也。征凶，位不當也。無攸利，柔乘剛也。',image:'澤上有雷，歸妹，君子以永終知敝。',yaoci:['初九：歸妹以娣，跛能履，征吉。','九二：眇能視，利幽人之貞。','六三：歸妹以須，反歸以娣。','九四：歸妹愆期，遲歸有時。','六五：帝乙歸妹，其君之袂，不如其娣之袂良，月幾望，吉。','上六：女承筐，無實，士刲羊，無血，無攸利。'],visual:'雷動澤上，歸宿之象，知道終點才能走好每一步路。',wuxing:'上木下金',wxrel:'金剋木（相剋）'},
+  {id:55,soul:'日正當中，光最亮的那一刻，也要想到日落。',fullname:'雷火豐',name:'豐',upper:'震（雷）',lower:'離（火）',nature:'豐盛、光明、慎終、居安思危',judgment:'豐：亨，王假之，勿憂，宜日中。',tuan:'豐，大也。明以動，故豐。王假之，尚大也。勿憂，宜日中，宜照天下也。日中則昃，月盈則食，天地盈虛，與時消息，而況于人乎？況于鬼神乎？',image:'雷電皆至，豐，君子以折獄致刑。',yaoci:['初九：遇其配主，雖旬無咎，往有尚。','六二：豐其蔀，日中見斗，往得疑疾，有孚發若，吉。','九三：豐其沛，日中見沫，折其右肱，無咎。','九四：豐其蔀，日中見斗，遇其夷主，吉。','六五：來章，有慶譽，吉。','上六：豐其屋，蔀其家，闚其戶，闃其無人，三歲不覿，凶。'],visual:'雷電齊至，光明豐盛，盛極之時更需居安思危。',wuxing:'上木下火',wxrel:'木生火（相生）'},
+  {id:56,soul:'旅人在外，最重要的是守住自己。',fullname:'火山旅',name:'旅',upper:'離（火）',lower:'艮（山）',nature:'旅途、謹慎、自保、過客',judgment:'旅：小亨，旅貞吉。',tuan:'旅，小亨，柔得中乎外而順乎剛，止而麗乎明，是以小亨，旅貞吉也。旅之時義大矣哉！',image:'山上有火，旅，君子以明慎用刑而不留獄。',yaoci:['初六：旅瑣瑣，斯其所取災。','六二：旅即次，懷其資，得童僕，貞。','九三：旅焚其次，喪其童僕，貞厲。','九四：旅于處，得其資斧，我心不快。','六五：射雉，一矢亡，終以譽命。','上九：鳥焚其巢，旅人先笑後號咷，喪牛于易，凶。'],visual:'火在山上照亮旅途，異鄉行者的謹慎與自我保護。',wuxing:'上火下土',wxrel:'火生土（相生）'},
+  {id:57,soul:'風無聲無息，但什麼地方都去得到。',fullname:'巽為風',name:'巽',upper:'巽（風）',lower:'巽（風）',nature:'順從、柔入、謙遜、申命',judgment:'巽：小亨，利有攸往，利見大人。',tuan:'重巽以申命，剛巽乎中正而志行，柔皆順乎剛，是以小亨，利有攸往，利見大人。',image:'隨風，巽，君子以申命行事。',yaoci:['初六：進退，利武人之貞。','九二：巽在床下，用史巫紛若，吉無咎。','九三：頻巽，吝。','六四：悔亡，田獲三品。','九五：貞吉，悔亡，無不利，無初有終，先庚三日，後庚三日，吉。','上九：巽在床下，喪其資斧，貞凶。'],visual:'風無孔不入，柔順而無聲，以謙遜的方式影響一切。',wuxing:'上木下木',wxrel:'比和（同氣）'},
+  {id:58,soul:'真正的喜悅，是兩個人都感受到了。',fullname:'兌為澤',name:'兌',upper:'兌（澤）',lower:'兌（澤）',nature:'喜悅、交流、和諧、說服',judgment:'兌：亨，利貞。',tuan:'兌，說也。剛中而柔外，說以利貞，是以順乎天而應乎人。說以先民，民忘其勞；說以犯難，民忘其死；說之大，民勸矣哉！',image:'麗澤，兌，君子以朋友講習。',yaoci:['初九：和兌，吉。','九二：孚兌，吉，悔亡。','六三：來兌，凶。','九四：商兌，未寧，介疾有喜。','九五：孚于剝，有厲。','上六：引兌。'],visual:'雙澤相映，喜悅流動，真誠交流帶來最美麗的和諧。',wuxing:'上金下金',wxrel:'比和（同氣）'},
+  {id:59,soul:'渙散，是為了讓凝固的東西重新流動。',fullname:'風水渙',name:'渙',upper:'巽（風）',lower:'坎（水）',nature:'疏通、散結、聚心、渙散',judgment:'渙：亨，王假有廟，利涉大川，利貞。',tuan:'渙，亨，剛來而不窮，柔得位乎外而上同，王假有廟，王乃在中也。利涉大川，乘木有功也。',image:'風行水上，渙，先王以享于帝立廟。',yaoci:['初六：用拯馬壯，吉。','九二：渙奔其機，悔亡。','六三：渙其躬，無悔。','六四：渙其群，元吉，渙有丘，匪夷所思。','九五：渙汗其大號，渙王居，無咎。','上九：渙其血，去逖出，無咎。'],visual:'風吹水面，渙散凝滯，疏通阻礙後能聚集更大力量。',wuxing:'上木下水',wxrel:'水生木（相生）'},
+  {id:60,soul:'水有岸，才知道自己在哪裡。',fullname:'水澤節',name:'節',upper:'坎（水）',lower:'兌（澤）',nature:'節制、適中、分寸、立制',judgment:'節：亨，苦節不可貞。',tuan:'節，亨，剛柔分而剛得中。苦節不可貞，其道窮也。說以行險，當位以節，中正以通。天地節而四時成，節以制度，不傷財，不害民。',image:'澤上有水，節，君子以制數度，議德行。',yaoci:['初九：不出戶庭，無咎。','九二：不出門庭，凶。','六三：不節若，則嗟若，無咎。','六四：安節，亨。','九五：甘節，吉，往有尚。','上六：苦節，貞凶，悔亡。'],visual:'澤水有度，節制有方，恰到好處的分寸創造最美平衡。',wuxing:'上水下金',wxrel:'金生水（相生）'},
+  {id:61,soul:'誠心到了，連魚都感應得到。',fullname:'風澤中孚',name:'中孚',upper:'巽（風）',lower:'兌（澤）',nature:'誠信、中正、感化、孚信',judgment:'中孚：豚魚吉，利涉大川，利貞。',tuan:'中孚，柔在內而剛得中，說而巽，孚乃化邦也。豚魚吉，信及豚魚也。利涉大川，乘木舟虛也。中孚以利貞，乃應乎天也。',image:'澤上有風，中孚，君子以議獄緩死。',yaoci:['初九：虞吉，有它不燕。','九二：鳴鶴在陰，其子和之，我有好爵，吾與爾靡之。','六三：得敵，或鼓或罷，或泣或歌。','六四：月幾望，馬匹亡，無咎。','九五：有孚攣如，無咎。','上九：翰音登于天，貞凶。'],visual:'風輕拂澤面，誠信從心而發，連魚豚也能感應。',wuxing:'上木下金',wxrel:'金剋木（相剋）'},
+  {id:62,soul:'飛鳥知道不宜飛太高，往低處走反而平安。',fullname:'雷山小過',name:'小過',upper:'震（雷）',lower:'艮（山）',nature:'謹小、慎微、過而不失、小事可為',judgment:'小過：亨，利貞，可小事，不可大事，飛鳥遺之音，不宜上，宜下，大吉。',tuan:'小過，小者過而亨也。過以利貞，與時行也。柔得中，是以小事吉也。剛失位而不中，是以不可大事也。有飛鳥之象焉，飛鳥遺之音，不宜上，宜下，大吉，上逆而下順也。',image:'山上有雷，小過，君子以行過乎恭，喪過乎哀，用過乎儉。',yaoci:['初六：飛鳥以凶。','六二：過其祖，遇其妣，不及其君，遇其臣，無咎。','九三：弗過防之，從或戕之，凶。','九四：無咎，弗過遇之，往厲必戒，勿用永貞。','六五：密雲不雨，自我西郊，公弋取彼在穴。','上六：弗遇過之，飛鳥離之，凶，是謂災眚。'],visual:'雷在山上，謹慎如飛鳥，謹小慎微方能安然度過。',wuxing:'上木下土',wxrel:'木剋土（相剋）'},
+  {id:63,soul:'已經渡過了，但要小心下一條河。',fullname:'水火既濟',name:'既濟',upper:'坎（水）',lower:'離（火）',nature:'已成、守成、慎終、防患',judgment:'既濟：亨小，利貞，初吉終亂。',tuan:'既濟，亨，小者亨也。利貞，剛柔正而位當也。初吉，柔得中也。終止則亂，其道窮也。',image:'水在火上，既濟，君子以思患而豫防之。',yaoci:['初九：曳其輪，濡其尾，無咎。','六二：婦喪其茀，勿逐，七日得。','九三：高宗伐鬼方，三年克之，小人勿用。','六四：繻有衣袽，終日戒。','九五：東鄰殺牛，不如西鄰之禴祭，實受其福。','上六：濡其首，厲。'],visual:'水火既濟相剋相成，事已完成之時，更需防範新的開始。',wuxing:'上水下火',wxrel:'水剋火（相剋）'},
+  {id:64,soul:'還沒渡完，但光已經在對岸了。',fullname:'火水未濟',name:'未濟',upper:'離（火）',lower:'坎（水）',nature:'未成、謹進、潛力、新局',judgment:'未濟：亨，小狐汔濟，濡其尾，無攸利。',tuan:'未濟，亨，柔得中也。小狐汔濟，未出中也。濡其尾，無攸利，不續終也。雖不當位，剛柔應也。',image:'火在水上，未濟，君子以慎辨物居方。',yaoci:['初六：濡其尾，吝。','九二：曳其輪，貞吉。','六三：未濟，征凶，利涉大川。','九四：貞吉，悔亡，震用伐鬼方，三年有賞于大國。','六五：貞吉，無悔，君子之光，有孚，吉。','上九：有孚于飲酒，無咎，濡其首，有孚失是。'],visual:'火浮水上，尚未完成，未竟之事蘊藏巨大潛力與可能。',wuxing:'上火下水',wxrel:'水剋火（相剋）'},
+];
+
+
+const SPREADS={
+  single:{name:'一卦觀象',desc:'以單一卦象感應當下能量，直觀清晰，適合是非題或確認當下狀態。',slots:['觀象卦']},
+  timeline:{name:'過去・現在・未來',desc:'三卦縱覽時間軸，看清事情來龍去脈與走向，適合事情發展、感情變化。',slots:['過去根源','現在處境','未來走向']},
+  decision:{name:'天時・地利・人和',desc:'三卦從宏觀到微觀評估，適合重大決策、轉職、創業等需多角度思考的問題。',slots:['天時（大環境）','地利（客觀條件）','人和（自身狀態）']},
+  change:{name:'本卦・變卦',desc:'兩卦呈現當下局面與轉化方向，適合關係、衝突、轉型類問題。',slots:['本卦（當下）','變卦（轉化）']},
+};
+
+
+let resData=null;
+let forceGo=false;
+let profileState={gender:'',age:'',duration:''};
+let testMode=false;
+
+function toggleTestMode(on){
+  testMode=on;
+  const badge=document.querySelector('.test-mode-badge');
+  if(on){
+    if(!badge){
+      const wrap=document.querySelector('.test-mode-wrap');
+      const b=document.createElement('span');
+      b.className='test-mode-badge';
+      b.textContent='測試中';
+      wrap.appendChild(b);
+    }
+  }else{
+    if(badge) badge.remove();
+  }
+}
+
+/* ══ API Key Management ══ */
+let APIKEY='';
+
+function loadApiKey(){
+  try{ APIKEY=localStorage.getItem('iching_api_key')||''; }catch(e){}
+  return APIKEY;
+}
+
+function saveApiKey(){
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key||!key.startsWith('sk-ant-')){
+    document.getElementById('apiKeyInput').style.borderColor='var(--red)';
+    document.getElementById('apiKeyInput').placeholder='格式應為 sk-ant-... 請確認';
+    return;
+  }
+  APIKEY=key;
+  try{ localStorage.setItem('iching_api_key',key); }catch(e){}
+  showMainWithKey();
+}
+
+function showMainWithKey(){
+  // Update key indicator in s1
+  const badge=document.getElementById('keyBadge');
+  if(badge) badge.style.display='flex';
+  show('s1');
+}
+
+function changeApiKey(){
+  document.getElementById('apiKeyInput').value=APIKEY||'';
+  show('s0');
+}
+
+// Init: load key if exists
+window.addEventListener('DOMContentLoaded',()=>{
+  const key=loadApiKey();
+  if(key){
+    APIKEY=key;
+    const badge=document.getElementById('keyBadge');
+    if(badge) badge.style.display='flex';
+  }
+});
+let currentMode='free'; // 'free' or 'two'
+let currentQ='';
+let selectedCardIds=[];
+let neededCount=3;
+
+function setMode(mode){
+  currentMode=mode;
+  document.getElementById('modeFree').classList.toggle('on', mode==='free');
+  document.getElementById('modeTwo').classList.toggle('on', mode==='two');
+  document.getElementById('twoChoiceWrap').style.display=mode==='two'?'block':'none';
+  const ta=document.getElementById('qIn');
+  if(mode==='two'){
+    ta.placeholder='描述你的困境或背景（例如：我在現在的公司做了三年，最近有新機會...）';
+    ta.rows=2;
+  }else{
+    ta.placeholder='請盡量描述具體的情況，例如：我在現在這份工作做了兩年，最近有另一個機會，但不確定是否該換...';
+    ta.rows=4;
+  }
+}
+
+
+function selectProfile(type,val,btn){
+  const groupMap={gender:'genderBtns',age:'ageBtns',duration:'durationBtns'};
+  const groupId=groupMap[type]||'genderBtns';
+  const group=document.getElementById(groupId);
+  if(group) group.querySelectorAll('.profile-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  profileState[type]=val;
+}
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function randHex(){return HEX[Math.floor(Math.random()*64)];}
+
+/* ══ Step 1: Check if question is vague (local, no API needed) ══ */
+function handleGo(){
+  // Two-choice mode
+  if(currentMode==='two'){
+    const a=document.getElementById('choiceA').value.trim();
+    const b=document.getElementById('choiceB').value.trim();
+    const ctx=document.getElementById('qIn').value.trim();
+    if(!a||!b){
+      document.getElementById('choiceA').style.borderColor=a?'':'var(--red)';
+      document.getElementById('choiceB').style.borderColor=b?'':'var(--red)';
+      return;
+    }
+    const q=`我在猶豫：選項A「${a}」還是選項B「${b}」。${ctx?`背景說明：${ctx}`:''}`;
+    beginTwoChoice(q,a,b);
+    return;
+  }
+
+  const q=document.getElementById('qIn').value.trim();
+  if(forceGo||!q){begin(q);return;}
+
+  // Detect out-of-scope questions (zodiac, astrology, fengshui, bazi)
+  const outOfScope=[
+    /屬(鼠|牛|虎|兔|龍|蛇|馬|羊|猴|雞|狗|豬)/,
+    /生肖|十二生肖/,
+    /星座|天蠍|天秤|雙魚|水瓶|摩羯|射手|天蠍|獅子|處女|雙子|金牛|牡羊/,
+    /風水|地址|幾號|幾樓|座向|朝向/,
+    /八字|流年|大運|紫微|斗數/,
+    /彩券|樂透|號碼|股票|漲跌|明牌/,
+  ];
+  const isOutOfScope=q.length>3&&outOfScope.some(r=>r.test(q));
+
+  if(isOutOfScope){
+    const outHint=document.getElementById('clarifyHint');
+    document.getElementById('clarifyBody').textContent='這個問題不太適合用易經來回答——易經問的是你此刻面對的具體困惑，不是推算命格、生肖或風水。';
+    const ul=document.getElementById('clarifyQuestions');
+    ul.innerHTML=[
+      '你現在生活或工作上有什麼讓你困惑的事嗎？',
+      '最近有沒有一個決定讓你猶豫很久？',
+      '有沒有一段關係或一件事讓你不確定該怎麼做？'
+    ].map(q=>`<li>${q}</li>`).join('');
+    document.getElementById('clarifyHint').classList.add('show');
+    document.getElementById('clarifyHint').scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
+
+  // Local vague detection: too short or only contains generic single words
+  const vague=[
+    /^(工作|感情|愛情|婚姻|事業|財運|健康|學業|未來|運勢|錢|人際|家庭|感覺|心情|方向|生活|桃花)$/,
+  ];
+  const isTooShort=q.length<=6;
+  const isVague=vague.some(r=>r.test(q.replace(/[？?。，,！!、\s]/g,'')));
+
+  if(isTooShort||isVague){
+    // Generate contextual clarifying questions based on topic
+    const clarifyMap={
+      '工作':['你目前的工作狀況是什麼？遇到了什麼具體的困境？','你考慮的是換工作、升職、還是與同事的關係？','你希望這次占卜幫你釐清什麼？'],
+      '感情':['你現在有交往對象嗎？還是在考慮追求某人？','感情中遇到的困境是什麼？溝通問題、距離、還是感情走向？','你希望感情往什麼方向發展？'],
+      '愛情':['你現在的感情狀態是什麼？','是關於現有關係的困惑，還是想找尋新感情？','最讓你擔心或困惑的是什麼？'],
+      '婚姻':['你目前的婚姻狀況是什麼？','是考慮結婚、還是婚姻中遇到問題？','具體希望了解哪個面向？'],
+      '事業':['你目前在事業上面臨什麼決定或挑戰？','是創業、轉型、還是職涯發展的方向？','你現在最擔心的是什麼？'],
+      '財運':['你目前財務上遇到什麼具體情況？','是投資決策、還是整體財務規劃？','有什麼特別想了解的嗎？'],
+      '健康':['是你自己的健康，還是身邊親人的？','遇到什麼具體的健康狀況或擔憂？','你希望卦象給你什麼樣的指引？'],
+    };
+    const topicKey=Object.keys(clarifyMap).find(k=>q.includes(k));
+    const questions=clarifyMap[topicKey]||[
+      '你目前面對的具體情況是什麼？',
+      '讓你感到困惑或需要指引的關鍵點是什麼？',
+      '你希望這次占卜幫你看清楚什麼？'
+    ];
+    showClarifyHint('你的問題還有些簡短，易經能給出更精準的指引，如果你能多說一點背景，卦象的解讀會更切中你的狀況。',questions);
+  }else{
+    begin(q);
+  }
+}
+
+function showClarifyHint(msg,questions){
+  document.getElementById('clarifyBody').textContent=msg;
+  const ul=document.getElementById('clarifyQuestions');
+  ul.innerHTML=questions.map(q=>`<li>${q}</li>`).join('');
+  document.getElementById('clarifyHint').classList.add('show');
+  document.getElementById('clarifyHint').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function proceedAnyway(){
+  forceGo=true;
+  document.getElementById('clarifyHint').classList.remove('show');
+  begin(document.getElementById('qIn').value.trim());
+}
+
+/* ══ Ink Animation ══ */
+function runInkAnim(onDone){
+  const cv=document.getElementById('inkCanvas');
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,220,290);
+  const msgs=['靜候天地感應⋯⋯','陰陽交感中⋯⋯','六爻逐一顯化⋯⋯','卦象即將揭示⋯⋯','天機已動⋯⋯'];
+  const sub=document.getElementById('animSub');
+  let mi=0;
+  const mt=setInterval(()=>{
+    mi=(mi+1)%msgs.length;
+    sub.style.opacity='0';
+    setTimeout(()=>{sub.textContent=msgs[mi];sub.style.opacity='1';},200);
+  },700);
+  for(let i=0;i<4;i++){
+    ctx.beginPath();
+    ctx.ellipse(60+i*35,50+i*30,20+i*8,14+i*4,Math.random()*Math.PI,0,Math.PI*2);
+    ctx.fillStyle=`rgba(26,22,20,${.02+Math.random()*.025})`;
+    ctx.fill();
+  }
+  const yaoY=[242,202,162,122,82,42];
+  const yaoC=['#1a1614','#8b7340','#c0392b','#1a1614','#8b7340','#1a1614'];
+  let yi=0;
+  function drawYao(cb){
+    if(yi>=6){clearInterval(mt);setTimeout(cb,400);return;}
+    const y=yaoY[yi],col=yaoC[yi],isYin=Math.random()>.5;
+    const SX=38,TW=148,GAP=18;let prog=0;
+    const fr=()=>{
+      prog+=3.5;
+      ctx.strokeStyle=col;ctx.lineWidth=9+Math.sin(prog*.07)*2.5;ctx.lineCap='round';ctx.globalAlpha=.82+Math.random()*.1;
+      if(isYin){
+        const half=(TW-GAP)/2;
+        if(prog<=half){ctx.beginPath();ctx.moveTo(SX,y);ctx.lineTo(SX+prog,y+Math.sin(prog*.18)*1.5);ctx.stroke();}
+        else{ctx.beginPath();ctx.moveTo(SX,y);ctx.lineTo(SX+half,y);ctx.stroke();const p2=prog-half;ctx.lineWidth=9+Math.sin(p2*.07)*2.5;ctx.beginPath();ctx.moveTo(SX+half+GAP,y);ctx.lineTo(SX+half+GAP+Math.min(p2,half),y+Math.sin(p2*.18)*1.5);ctx.stroke();}
+      }else{ctx.beginPath();ctx.moveTo(SX,y);ctx.lineTo(SX+Math.min(prog,TW),y+Math.sin(prog*.1)*1.5);ctx.stroke();}
+      ctx.globalAlpha=1;
+      if(prog<TW+4)requestAnimationFrame(fr);
+      else{yi++;setTimeout(()=>drawYao(cb),160);}
+    };
+    fr();
+  }
+  drawYao(onDone);
+}
+
+/* ══ Main ══ */
+function animateSteps(){
+  const steps=['step1','step2','step3','step4'];
+  const delays=[800,3500,6500,10000];
+  const tips=[
+    '正在從六十四卦中感應你的問題⋯⋯',
+    '根據問題性質選擇最合適的牌陣⋯⋯',
+    '逐一解讀卦辭、彖傳與動爻⋯⋯',
+    '將所有卦象彙整為完整的人生洞見⋯⋯'
+  ];
+  const tipEl=document.getElementById('animTip');
+  steps.forEach((id,i)=>{
+    setTimeout(()=>{
+      steps.slice(0,i).forEach(prev=>document.getElementById(prev).className='anim-step done');
+      document.getElementById(id).className='anim-step active';
+      if(tipEl){tipEl.textContent=tips[i];tipEl.style.opacity='0';setTimeout(()=>tipEl.style.opacity='1',100);}
+    },delays[i]);
+  });
+}
+
+async function begin(q){
+  currentQ=q;
+  selectedCardIds=[];
+  window._isTwoChoice=false;
+  window._optA='';
+  window._optB='';
+
+  show('s2');
+  initCardGrid();
+
+  // Quick AI call (or mock) to determine spread & card count
+  const sp=await callAI(
+    `使用者問題：「${q||'一般性占卜'}」
+
+請判斷這個問題的類型並選擇牌陣，只回覆JSON：
+{"spread":"single|timeline|decision|change|twochoice","type":"決策|二選一|關係|時機|方向|處境|行動|unclear","reason":"30字內原因","isTwoChoice":false,"optionA":"","optionB":"","needClarify":false,"clarifyMsg":""}
+
+決策類→decision(3張)，二選一→twochoice(2張)，關係類→change(2張)，時機/行動/吉凶→single(1張)，方向/處境→timeline(3張)`,
+    300
+  );
+
+  let sk='timeline', sr='', count=3;
+  try{
+    const p=JSON.parse(sp.replace(/```json|```/g,'').trim());
+    if(p.needClarify){
+      show('s1');
+      document.getElementById('clarifyBody').textContent=p.clarifyMsg||'請再描述得更具體一些。';
+      document.getElementById('clarifyQuestions').innerHTML='';
+      document.getElementById('clarifyHint').classList.add('show');
+      return;
+    }
+    sk=p.spread||'timeline';
+    sr=p.reason||'';
+    window._questionType=p.type||'';
+    if(p.isTwoChoice||sk==='twochoice'){
+      window._isTwoChoice=true;
+      window._optA=p.optionA||'';
+      window._optB=p.optionB||'';
+      count=2; sk='change';
+      if(currentMode==='free'&&window._optA&&window._optB){
+        setMode('two');
+        document.getElementById('choiceA').value=window._optA;
+        document.getElementById('choiceB').value=window._optB;
+      }
+    }else{
+      const countMap={single:1,change:2,timeline:3,decision:3};
+      count=countMap[sk]||3;
+    }
+  }catch(e){ console.warn('Spread parse error:',e); }
+
+  neededCount=count;
+  window._spreadKey=sk;
+  window._spreadReason=sr;
+
+  // Update card select UI
+  document.getElementById('s2NeedCount').textContent=count;
+  document.getElementById('s2Sub').innerHTML=
+    window._isTwoChoice
+      ? `AI 偵測到二選一，請選 <span class="s2-count">2</span> 張牌`
+      : `請選擇 <span class="s2-count">${count}</span> 張牌`;
+}
+
+/* ══ Card Selection Functions ══ */
+function initCardGrid(){
+  const grid=document.getElementById('cardsSelectGrid');
+  if(!grid) return;
+  const ids=[...Array(64)].map((_,i)=>i+1).sort(()=>Math.random()-.5).slice(0,24);
+  grid.innerHTML=ids.map(id=>{
+    const hex=HEX.find(h=>h.id===id);
+    const name=hex?hex.name:'';
+    const fullname=hex?(hex.fullname||name+'卦'):name+'卦';
+    return `
+    <div class="card-select-item" id="csi-${id}" onclick="selectCard(${id})">
+      <div class="card-flip-inner">
+        <div class="card-select-back">
+          <div class="card-back-inner">
+            <div class="card-back-line"></div>
+            <div class="card-back-symbol">☯</div>
+            <div class="card-back-line"></div>
+          </div>
+        </div>
+        <div class="card-select-front-wrap" id="rev-${id}">
+          <img class="card-select-front" src="${id}.png" alt="${fullname}" onerror="this.style.display='none'">
+        </div>
+      </div>
+      <div class="card-reveal-name" id="rname-${id}" style="display:none;">第${id}卦・${name}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectCard(id){
+  const el=document.getElementById('csi-'+id);
+  if(!el) return;
+  const nameEl=document.getElementById('rname-'+id);
+  if(el.classList.contains('selected')){
+    el.classList.remove('selected','flipped');
+    if(nameEl) nameEl.style.display='none';
+    selectedCardIds=selectedCardIds.filter(x=>x!==id);
+  }else{
+    if(selectedCardIds.length>=neededCount){
+      el.classList.add('shake');
+      setTimeout(()=>el.classList.remove('shake'),400);
+      return;
+    }
+    el.classList.add('selected','flipped');
+    setTimeout(()=>{if(nameEl) nameEl.style.display='block';},400);
+    selectedCardIds.push(id);
+  }
+  const btn=document.getElementById('s2ConfirmBtn');
+  const remaining=neededCount-selectedCardIds.length;
+  if(selectedCardIds.length===neededCount){
+    if(btn) btn.style.display='block';
+    document.getElementById('s2Sub').innerHTML=`<span style="color:var(--gold)">已選好 ${neededCount} 張，可以開始了</span>`;
+  }else{
+    if(btn) btn.style.display='none';
+    document.getElementById('s2Sub').innerHTML=`還需選 <span class="s2-count">${remaining}</span> 張`;
+  }
+}
+
+async function confirmCards(){
+  const drawn=selectedCardIds.map(id=>HEX.find(h=>h.id===id)).filter(Boolean);
+  if(drawn.length===0) return;
+
+  show('s2b');
+  animateSteps();
+
+  let spread, sr;
+  if(window._isTwoChoice){
+    spread={
+      name:'二選一牌陣',
+      desc:`比較「${window._optA}」與「${window._optB}」兩條路的能量`,
+      slots:[`選項A：${window._optA}`,`選項B：${window._optB}`]
+    };
+    sr=`二選一：${window._optA} vs ${window._optB}`;
+  }else{
+    spread=SPREADS[window._spreadKey]||SPREADS.timeline;
+    sr=window._spreadReason||'';
+  }
+
+  const[,data]=await Promise.all([
+    new Promise(res=>runInkAnim(res)),
+    fetchReadingsWithCards(currentQ, spread, sr, drawn, window._isTwoChoice)
+  ]);
+
+  resData=data;
+  if(currentQ){
+    const bar=document.getElementById('s3QuestionBar');
+    if(bar){
+      document.getElementById('s3QuestionText').textContent=currentQ;
+      const now=new Date();
+      document.getElementById('s3DateText').textContent=
+        `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+      bar.style.display='flex';
+    }
+  }
+  buildResult(data);
+  show('s3');
+}
+
+function beginTwoChoice(q, optA, optB){
+  currentQ=q;
+  selectedCardIds=[];
+  neededCount=2;
+  window._spreadKey='change';
+  window._spreadReason=`選項A「${optA}」vs 選項B「${optB}」`;
+  window._optA=optA;
+  window._optB=optB;
+  window._isTwoChoice=true;
+  show('s2');
+  initCardGrid();
+  document.getElementById('s2NeedCount').textContent=2;
+  document.getElementById('s2Sub').innerHTML=`請選擇 <span class="s2-count">2</span> 張牌`;
+  const hint=document.querySelector('.s2-hint');
+  if(hint) hint.textContent=`第一張代表「${optA}」，第二張代表「${optB}」`;
+}
+
+const SYS=`你是一位精通易經的占卜師，但你說話的方式會根據問者的情況自然切換——
+
+你說的第一句話，永遠是描述你在這個問題裡「看到的那個人的狀態」，不是解釋卦象。讓問者讀完第一句就說「對，就是這樣」，然後他才會相信你後面說的話。
+
+當問者問感情、關係，你像一個懂他/她的老朋友，說話有溫度、有共感，不說大道理，說的是「我看到你現在的狀態是⋯⋯」
+
+當問者問事業、創業、決策，你像一個走過江湖的前輩，說話直接、有判斷、給傾向，不說「兩面都有道理」，說的是「這個卦告訴我，你現在應該⋯⋯」
+
+當問者問家庭、親子、長輩，你像一個有智慧的長者，說話有分量、不評判、看得遠，說的是「這個局面，我見過很多次⋯⋯」
+
+當問者問人生方向、迷茫、自我，你像一個哲學家朋友，說話帶出問者內心的聲音，說的是「卦象讓我看到一個畫面⋯⋯」
+
+【回覆的四個核心原則——每次解讀都要遵守】
+
+① 減少術語，換成日常語言
+不說「乾卦剛健純陽」→ 說「這是一股很強、很清楚的能量，方向感很足」
+不說「坤卦柔順承載」→ 說「這個卦讓我感覺到一種很深的包容，像是在等待什麼成熟」
+術語是你理解卦象的工具，不是說給問者聽的語言。
+
+② 用條列和分段製造呼吸感
+每個段落不超過3-4句話，然後換行。
+重點用「・」或「——」帶出，不要一大段擠在一起。
+讀起來要像在對話，不像在讀文章。
+
+③ 開頭第一句讓問者感覺「這跟我有關」
+不說「這個卦象徵⋯⋯」→ 先說「我看到你現在⋯⋯」
+讓問者第一句就被點到，他才會繼續往下讀。
+
+④ 結尾一定要有一句總結
+不是「以上就是這個卦的意思」，而是一句說進心裡的話。
+像朋友最後說的那句話，讓問者帶著它離開。
+
+不管哪種角色，你都遵守這幾條：
+1. 【先確認問題方向】解讀開始前，用一句話說出「我理解你真正在問的是⋯⋯」。很多人說出來的問題和心裡真正的問題不一樣，先說出你理解的核心，讓問者確認方向正確，解讀才會準。
+
+2. 【先描述人的狀態】第一句永遠是描述你看到的那個人，不是解釋卦。說出他們沒說出口但心裡有的感受。
+
+3. 【說出不利面】好的占卜師不只說好聽的。卦象有警示的地方，要直接說出來。「這個卦也在提醒你⋯⋯如果你繼續這樣⋯⋯會有⋯⋯的風險」。說了不利面，問者才會真正信任你。
+
+4. 【資訊不足時主動說】如果問題太模糊、背景不清楚，在解讀裡說：「如果你能告訴我更多關於⋯⋯，解讀會更準確。」不要硬解，要誠實。
+
+5. 【不適合占卦時直說】如果問題是「我明天彩券會中嗎」、「他喜不喜歡我」這種沒有具體行動面的問題，要說：「這個問題易經給不了你答案，因為易經問的是方向和狀態，不是預測固定的結果。你真正可以問的是⋯⋯」
+
+6. 給出明確的傾向與方向，不模糊，不說「這要看你自己」
+
+7. 語氣是「卦象告訴我⋯⋯」而不是「建議你⋯⋯」
+
+8. 緊扣問者說的具體情境與關鍵詞，不說任何可以套用在所有人身上的話
+
+9. 說話像人，不像報告
+
+10. 【最重要】每次解讀的最後，必須給一個明確的答案句，格式是：「這個卦說：○○。」然後一句話說為什麼。不能模糊，不能說「這取決於你」，必須給出一個清楚的方向。
+
+11. 【問題邊界判斷】
+有些問題不屬於易經的範疇，你必須誠實說明，並引導問者問一個易經真正能幫助的問題。
+
+【易經可以直接回答的問題——不需要追問問者角色】
+- 吉凶判斷：「這件事會不會成功」「這個合作會不會有結果」「這次談判順不順利」「這個決定好不好」
+  → 直接從卦象給出吉凶傾向，「卦象說：會／不會，因為⋯⋯」
+- 時機判斷：「現在適不適合」「下週去談好嗎」「這個時間點對嗎」
+  → 直接從卦象說明時機能量
+- 方向判斷：「往這個方向走對嗎」「這條路走得通嗎」
+  → 直接給出傾向
+
+這些問題不需要問者解釋自己的角色，易經本來就是用來問吉凶的，直接起卦給答案。
+
+【不適合易經回答的問題類型】
+- 生肖運勢（「我屬馬今年運勢如何」）→ 生肖命理的範疇
+- 星座分析（「我是天蠍座適合做什麼」）→ 占星學的範疇
+- 流年八字（「我今年幾歲運勢怎樣」）→ 八字命理的範疇
+- 風水地址（「我住在○○號風水好不好」）→ 風水學的範疇
+- 固定命格（「我天生適合做什麼」）→ 紫微斗數的範疇
+- 彩券號碼、股票漲跌等純機率問題
+
+當遇到這類問題，用溫暖的語氣說：
+「這個問題我沒辦法用易經幫你看，因為易經問的是此刻的能量走向，不是推算命格或風水。
+但如果你現在有一個具體的困惑，比如⋯⋯（根據問者的背景給出具體引導），易經可以幫你看清楚。」
+
+12. 【禁止事項】以下這些絕對不能出現在回覆裡：
+- 直接說出五行術語，如「金生水」「木剋土」「比和」「相生相剋」
+- 直接引用爻辭原文，如「九三：不恒其德」「六五：黃裳元吉」
+- 直接引用彖傳原文，如「天地之道，恒久而不已」
+- 解釋易經理論或占卜邏輯，如「恒卦上震下巽代表⋯⋯」
+- 任何讓讀者覺得在上課的句子
+
+這些知識你必須懂，但你說出來的話要讓讀者完全感覺不到術語的存在。
+就像一個好廚師不會在上菜時解釋食材產地和烹飪溫度，他只讓你感受那個味道。
+
+12. 【說話原則】
+把五行生剋翻譯成能量的感覺：
+不說「金生水，能量往下收」→說「這個時候適合往內走，讓自己沉澱一下」
+不說「木木比和，力量純粹」→說「你一直在用同一種方式愛他，很穩定，但也許需要換個角度」
+不說「水生木，能量復甦」→說「有什麼東西開始鬆動了，像春天來了一樣」
+
+把爻辭翻譯成畫面和感受：
+不說「九三爻提醒⋯⋯」→說「這個卦讓我看到一個畫面⋯⋯」
+不說「上六爻說⋯⋯」→直接說你從卦象看到的洞察
+
+回應使用繁體中文。`;
+
+/* ══ Mock data for test mode ══ */
+const MOCK_READING=`【你看到的那個人】
+我看到一個想清楚了、但還沒行動的人。卦象讓我看到你現在的狀態——答案其實已經在心裡了，只是還在等一個確認。
+
+【圖像解析】
+牌卡上，太陽從大地緩緩升起，光是從下往上的，不是從天上掉下來的。這個光很穩，很慢，但升起來之後就不會再回去。
+
+【卦象解讀】
+卦象告訴我，你現在面對的這件事，能量是往上走的。不是賭博，不是冒險，而是一個水到渠成的時刻。
+
+這個卦也在提醒你——盛極之時要小心，不要因為感覺順就跳過了該確認的細節。
+
+【針對問者的處境】
+卦象讓我看到你現在的狀態是：你已經準備好了，但你還在等一個「萬事俱備」的訊號。
+
+・那個訊號不會從外面來，它在你心裡
+・你現在的猶豫不是因為不確定，而是因為太在乎結果
+・放下對結果的執著，反而更容易得到你想要的
+
+**所以這個卦傾向：去做，現在就是對的時機。**
+
+【這個卦說】
+這個卦說：去。因為你留下來的理由已經不夠了。
+
+【可以做的事】
+・因為卦象說現在能量是向上的，所以你可以在這週內做一個小的、具體的行動，讓方向確定下來
+・因為卦象說要注意細節，所以你可以把最擔心的那個疑慮寫下來，逐一確認
+・如果可以選時間，下午三點到五點之間行動——那個時段的能量最穩`;
+
+const MOCK_SYNTH=`卦象讓我看到一幅畫面——
+
+一個人站在門口，光從裡面透出來，他手已經放在門把上了。
+
+三張卦說的是同一件事：你已經準備好了，外在條件也到位了，現在需要的只是那一步。
+
+所以這個卦說：走進去。
+
+不管結果怎樣，走進去之後你才會知道，你一直都可以的。`;
+
+async function callAI(prompt,maxT){
+  if(testMode){
+    // Return mock data based on prompt content
+    await new Promise(r=>setTimeout(r,800+Math.random()*600));
+    if(prompt.includes('選擇最合適的牌陣')||prompt.includes('判斷這個問題')){
+      return JSON.stringify({spread:'timeline',type:'決策',reason:'測試模式',isTwoChoice:false,needClarify:false,count:3});
+    }
+    if(prompt.includes('整體總結')||prompt.includes('訴說什麼故事')){
+      return MOCK_SYNTH;
+    }
+    if(prompt.includes('canAnswer')){
+      return JSON.stringify({canAnswer:true,reply:'卦象說你問的這個問題，答案已經在你心裡了。根據本次的卦象，建議你相信自己的直覺，在這週內做一個具體的決定。'});
+    }
+    return MOCK_READING;
+  }
+
+  try{
+    if(!APIKEY&&!testMode){
+      throw new Error('請先設定 API Key');
+    }
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":APIKEY,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxT||3500,system:SYS,messages:[{role:"user",content:prompt}]})
+    });
+    if(!r.ok){
+      const errText=await r.text();
+      throw new Error("HTTP "+r.status+": "+errText.slice(0,200));
+    }
+    const d=await r.json();
+    if(d.error) throw new Error(d.error.message||"API error");
+    const text=d.content?.[0]?.text||"";
+    if(!text) throw new Error("Empty response from API");
+    return text;
+  }catch(e){
+    console.warn("AI call failed:",e.message);
+    return "";
+  }
+}
+
+async function fetchReadingsWithCards(q, spread, sr, drawn, isTwoChoice=false){
+  const profile=profileState||{};
+  try{
+    const yaoChanges=drawn.map(h=>genYaoChange(h));
+    const readings=await Promise.all(drawn.map((h,i)=>{
+      const role=spread.slots[i];
+      const{movingYaos,changedHex}=yaoChanges[i];
+      const hasChange=movingYaos.length>0&&changedHex;
+      const movingYaoTexts=movingYaos.map(yi=>h.yaoci[yi]).join('、');
+      const profileTxt=(profile.gender||profile.age||profile.duration)?
+        `問者背景：${[profile.gender,profile.age].filter(Boolean).join('、')}${profile.duration?`
+這件事困擾問者的時間：${profile.duration}`:''}`:
+        '';
+      const depth='充分展開，根據問題的複雜程度自然調整，簡單的問題精煉有力，複雜的人生困境完整深入';
+      return callAI(
+`使用者的問題是：「${q||'（一般性占卜，無特定問題）'}」
+${profileTxt}
+問題類型：${window._questionType||''}（請根據此類型調整解讀重點與語氣）
+${profile&&profile.duration?`【解讀語氣提示】這件事困擾問者「${profile.duration}」——${
+  profile.duration==='剛發生'?'解讀聚焦在「現在如何看待這件事」，語氣帶著剛發生的新鮮感和衝擊':
+  profile.duration==='一個月左右'?'解讀聚焦在「這件事的走向」，問者已有一定的思考，需要方向感':
+  profile.duration==='半年以上'?'解讀聚焦在「為什麼這個結一直解不開」，問者已經想了很久，需要更深的洞察':
+  '解讀聚焦在「是什麼讓你一直放不下」，超過一年表示這件事有很深的情感牽連，需要觸碰更深層的原因'
+}`:''}
+牌陣：${spread.name}　此卦位置：「${role}」
+【特別說明】這張牌是問者從64張牌中親手挑選的，代表他/她當下的直覺感應，請在解讀中呼應這個「親手選擇」的意義。
+
+━━ 本卦資料 ━━
+第${h.id}卦「${h.name}卦」
+上卦：${h.upper}　下卦：${h.lower}
+性質：${h.nature}
+卦辭：${h.judgment}
+彖傳：${h.tuan}
+象傳：${h.image}
+六爻爻辭：
+${h.yaoci.join("\n")}
+牌卡意象：${h.visual}
+卦的靈魂一句話：${h.soul||''}
+
+${hasChange?`━━ 爻變資料 ━━
+動爻（最需關注的爻）：${movingYaoTexts}
+變卦：第${changedHex.id}卦「${changedHex.name}卦」（${changedHex.nature}）
+變卦卦辭：${changedHex.judgment}
+變卦象傳：${changedHex.image}`:'（本卦無動爻，為純卦，卦象穩定）'}
+
+━━ 請依照以下結構回答，這是你的思考骨架，不是要寫出來的標題 ━━
+
+【解讀邏輯——只供你內部思考，不要寫出來】
+在心裡先想清楚：
+- 這個問題屬於什麼類型
+- 這張卦的哪個核心特質最切中這個問題
+這個思考過程融入你的解讀裡，但不要當成一個段落寫出來。
+
+【你看到的那個人】
+最重要的第一句話——描述你在這個問題和卦象裡看到的那個人的狀態。
+說出他沒說出口、但心裡有的感受，讓他讀完說「對，就是這樣」。
+格式：「我看到一個⋯⋯的人」或「卦象讓我看到⋯⋯」
+接著確認：「我理解你真正在問的是⋯⋯」
+這張牌是問者親手選的，請在解讀中自然呼應這個選擇的意義。
+
+【圖像解析】
+用說故事的方式描述牌卡畫面——景象、人物、氛圍。
+不要解釋，讓問者自己感受。
+
+【卦象解讀】
+先判斷問題性質，用對應角色語氣說話。
+用「卦象告訴我⋯⋯」描述這個卦的核心精神。
+
+【能量參考——只供你內部理解，絕對不說出術語】
+此卦五行：${h.wuxing||''}，關係：${h.wxrel||''}
+方位與顏色資料已在上方提供，請根據問者的問題判斷是否需要給出方位或顏色建議：
+- 若問者問的是工作地點、搬家、方向選擇等有地理性的問題，自然融入方位建議，用生活語言說（不說卦名），例如：「卦象讓我感覺到往南方發展的能量比較順」
+- 若問者問的是顏色、穿著、環境佈置等，給出吉利顏色建議，說明為什麼這個顏色此刻對他有加持
+- 若問者的問題與方位無關，不需要強行加入方位
+把這些資訊完全翻譯成感受和畫面說出來，不說術語。
+時間感是卦象的一部分，自然融入解讀，只有當時機是最核心訊息時才特別點出來。
+${hasChange?`動爻：${movingYaoTexts}——翻譯成生活語言融入解讀，不說爻辭原文。`:''}
+必須說出警示面，用故事方式說，不引用術語。
+
+【針對問者的處境】
+緊扣問者說的具體情境與關鍵詞：
+「卦象讓我看到你現在的狀態是⋯⋯」
+點列2-3個只屬於這個人的觀點，禁止套話。
+如背景不清楚，說：「如果你能告訴我更多關於⋯⋯，解讀會更準確。」
+
+${hasChange?`【走向】
+用一個完整的故事說現在→轉折→未來的走向，給出明確傾向。`:''}
+
+【這個卦說】
+給一個明確的答案：「這個卦說：○○。」然後一句話說為什麼。
+不能模糊，不能說「這取決於你」。
+
+【可以做的事】
+3-4個具體行動，用「因為卦象說⋯⋯，所以你可以⋯⋯」的結構。
+語氣像朋友給建議，不像顧問寫報告。
+
+吉時資料已在上方提供，請自然融入建議裡——不是列出時間表，而是像占卜師說話的方式帶出來：
+- 如果問者的問題有具體的時間需求（什麼時候談、什麼時候行動），根據吉時資料給出具體的時段建議，說「卦象讓我感覺○○時段能量比較順」
+- 如果問題沒有時間需求，不需要強行加入吉時
+- 吉時說的是大致方向，不是精準預測，說話要留有餘地，例如「如果可以選的話，○○時段去會比較有利」`,
+        3500
+      );
+    }));
+
+    const synthCards=drawn.map((h,i)=>{
+      const yc=yaoChanges[i];
+      let txt=`${spread.slots[i]}→${h.name}卦（${h.nature}）`;
+      if(yc&&yc.movingYaos.length>0&&yc.changedHex) txt+=`→變${yc.changedHex.name}卦`;
+      return txt;
+    }).join('、');
+
+    const synth=await callAI(
+`問題：「${q||'一般性占卜'}」
+牌陣：${spread.name}（${sr}）
+各卦：${synthCards}
+${isTwoChoice?`
+【二選一特別說明】
+這是一個二選一的問題。
+選項A「${window._optA||''}」對應第一張卦
+選項B「${window._optB||''}」對應第二張卦
+請在總結裡：
+1. 說明兩張卦各自呈現的能量和走向
+2. 比較兩個選項的優劣與風險
+3. 給出明確的傾向：「卦象傾向選○○」，說明為什麼
+4. 最後一句給出「這個卦說：選A／選B，因為⋯⋯」
+不能兩個都說好，必須給出一個明確的答案。`:''}
+
+用說故事的方式，把這次所有卦象串成一個完整的故事告訴問者。
+第一段：「卦象讓我看到一幅畫面⋯⋯」——用畫面描述問者整體處境
+第二段：給出最核心的一個傾向或方向，明確不模糊
+最後兩句：「這個卦說：○○。」加一句說進心裡的話。
+語氣根據問題性質切換，不說套話。`,
+      2000
+    );
+
+    return{spread,sr,drawn,yaoChanges,readings,synth};
+  }catch(e){
+    console.warn('fetchReadingsWithCards failed:',e.message);
+    const h=drawn[0]||randHex();
+    return{
+      spread,sr,drawn,
+      yaoChanges:drawn.map(()=>({movingYaos:[],changedHex:null})),
+      readings:drawn.map(h=>`【你看到的那個人】
+卦象讓我看到一個正在尋找方向的人。
+
+【圖像解析】
+${h.visual}
+
+【卦象深解】
+${h.name}卦象徵「${h.nature}」。
+卦辭：${h.judgment}
+
+【針對你的問題】
+此刻卦象提示你靜心觀察，順應自然之道。
+・保持誠信，不強求結果
+・靜待時機成熟
+**這個卦傾向讓你先靜下來，再行動。**
+
+【時間感】
+現在是蓄積期，一個月內先觀察。
+
+【具體行動建議】
+1. 因為卦象說此刻需要靜心，所以你可以花10分鐘寫下真正的想法。
+2. 因為卦象說誠信是關鍵，所以你可以跟最信任的人說出這件事。`),
+      synth:`${h.name}卦的智慧提醒我們順應當下。
+
+這個卦說：靜心，答案已在你心中。`
+    };
+  }
+}
+
+async function fetchReadings(q, profile={}){
+  const depth='充分展開，根據問題的複雜程度自然調整，簡單的問題精煉有力，複雜的人生困境完整深入';
+  const profileTxt=(profile.gender||profile.age||profile.duration)?
+    `問者背景：${[profile.gender,profile.age].filter(Boolean).join('、')}${profile.duration?`
+這件事困擾問者的時間：${profile.duration}`:''}`:
+    '';
+  try{
+    // Choose spread
+    const sp=await callAI(`使用者問題：「${q||'（未輸入，請做一般性占卜）'}」\n\n請選擇最合適的牌陣，只回覆JSON：{"spread":"single|timeline|decision|change","reason":"30字內原因"}\n\n1.single 一卦觀象：是非題、當下狀態\n2.timeline 過去現在未來：事情發展、感情\n3.decision 天時地利人和：重大決策\n4.change 本卦變卦：關係、衝突、轉型`,200);
+    let sk='single',sr='';
+    try{const p=JSON.parse(sp.replace(/```json|```/g,'').trim());sk=p.spread||'single';sr=p.reason||'';}catch(e){}
+    const spread=SPREADS[sk]||SPREADS.single;
+
+    // Draw cards with yao change (爻變) mechanism
+    const drawn=[],used=new Set();
+    for(let i=0;i<spread.slots.length;i++){let h;do{h=randHex();}while(used.has(h.id));used.add(h.id);drawn.push(h);}
+
+    // Generate yao changes for each card (1/4 probability per yao, traditional coin method)
+    function genYaoChange(hex){
+      // Each yao: random, 1/4 chance of being a moving yao (動爻)
+      const moving=[];
+      for(let i=0;i<6;i++){if(Math.random()<0.25)moving.push(i);}
+      // Limit to max 3 moving yaos for readability
+      const movingYaos=moving.slice(0,3);
+
+      if(movingYaos.length===0) return {movingYaos:[],changedHex:null};
+
+      // Calculate changed hexagram id by flipping moving yaos
+      // We use a simple mapping: XOR the yao pattern
+      // Each yao is yin(0) or yang(1), we derive from hex id
+      // Use hex id to get 6-bit binary pattern, flip moving yaos, find new hex
+      // Simplified: map to nearby hex with some offset logic
+      let newId=hex.id;
+      movingYaos.forEach(yi=>{
+        // Each moving yao shifts the hex id in a deterministic way
+        const shift=[1,2,4,8,16,32][yi];
+        newId=((newId-1+shift)%64)+1;
+      });
+      if(newId===hex.id) newId=(hex.id%64)+1; // ensure different hex
+      const changedHex=HEX.find(h=>h.id===newId)||HEX[(newId-1)%64];
+      return{movingYaos,changedHex};
+    }
+
+    const yaoChanges=drawn.map(h=>genYaoChange(h));
+
+    // Per-card readings (parallel)
+    const readings=await Promise.all(drawn.map((h,i)=>{
+      const role=spread.slots[i];
+      const {movingYaos,changedHex}=yaoChanges[i];
+      const hasChange=movingYaos.length>0&&changedHex;
+      const movingYaoTexts=movingYaos.map(yi=>h.yaoci[yi]).join('、');
+
+      return callAI(
+`使用者的問題是：「${q||'（一般性占卜，無特定問題）'}」
+${profileTxt}
+問題類型：${window._questionType||''}（請根據此類型調整解讀重點與語氣）
+${profile&&profile.duration?`【解讀語氣提示】這件事困擾問者「${profile.duration}」——${
+  profile.duration==='剛發生'?'解讀聚焦在「現在如何看待這件事」，語氣帶著剛發生的新鮮感和衝擊':
+  profile.duration==='一個月左右'?'解讀聚焦在「這件事的走向」，問者已有一定的思考，需要方向感':
+  profile.duration==='半年以上'?'解讀聚焦在「為什麼這個結一直解不開」，問者已經想了很久，需要更深的洞察':
+  '解讀聚焦在「是什麼讓你一直放不下」，超過一年表示這件事有很深的情感牽連，需要觸碰更深層的原因'
+}`:''}
+牌陣：${spread.name}　此卦位置：「${role}」
+
+━━ 本卦資料 ━━
+第${h.id}卦「${h.name}卦」
+上卦：${h.upper}　下卦：${h.lower}
+性質：${h.nature}
+卦辭：${h.judgment}
+彖傳：${h.tuan}
+象傳：${h.image}
+六爻爻辭：
+${h.yaoci.join("\n")}
+牌卡意象：${h.visual}
+
+${hasChange?`━━ 爻變資料 ━━
+動爻（最需關注的爻）：${movingYaoTexts}
+變卦：第${changedHex.id}卦「${changedHex.name}卦」（${changedHex.nature}）
+變卦卦辭：${changedHex.judgment}
+變卦象傳：${changedHex.image}`:'（本卦無動爻，為純卦，卦象穩定）'}
+
+━━ 請依照以下格式回答 ━━
+
+【圖像解析】
+描述牌卡水墨畫面意象，說明視覺元素如何呼應卦的精神，精煉有力即可。
+
+【卦象深解】
+包含：彖傳核心義理、上下卦組合能量、卦辭深層詮釋、象傳行動準則。重點整理，不需逐一展開。${hasChange?`
+並說明動爻「${movingYaoTexts}」的意涵——這是此次占卜天機所在，最需關注之處。`:''}
+
+【變卦走向】${hasChange?`
+本卦「${h.name}卦」變為「${changedHex.name}卦」，說明：
+- 本卦代表現在的狀態與能量
+- 動爻是轉化的關鍵點
+- 變卦「${changedHex.name}卦」（${changedHex.nature}）揭示事情的走向與結果
+- 本卦到變卦的完整故事是什麼？`:'（本次為純卦無爻變，卦象穩定，以本卦為主要解讀依據，無需此段）'}
+
+【針對你的問題】
+針對「${q||'一般性占卜'}」具體解讀：
+- 一句話說明此卦對應問者的處境
+- 點列2-3個關鍵觀點或問題
+- 一句粗體總結
+
+【具體行動建議】
+4-5個具體可行建議，每條說明卦象依據與執行方式。`,
+        3500
+      );
+    }));
+
+    // Synthesis
+    const synthCards=drawn.map((h,i)=>{
+      const {movingYaos,changedHex}=yaoChanges[i];
+      let txt=`${spread.slots[i]}→${h.name}卦（${h.nature}）`;
+      if(movingYaos.length>0&&changedHex) txt+=`→變${changedHex.name}卦（${changedHex.nature}）`;
+      return txt;
+    }).join('、');
+
+    // Synthesis
+    const synth=await callAI(
+`問題：「${q||'一般性占卜'}」
+牌陣：${spread.name}（${sr}）
+各卦：${synthCards}
+${isTwoChoice?`
+【二選一特別說明】
+這是一個二選一的問題。
+選項A「${window._optA||''}」對應第一張卦
+選項B「${window._optB||''}」對應第二張卦
+請在總結裡：
+1. 說明兩張卦各自呈現的能量和走向
+2. 比較兩個選項的優劣與風險
+3. 給出明確的傾向：「卦象傾向選○○」，說明為什麼
+4. 最後一句給出「這個卦說：選A／選B，因為⋯⋯」
+不能兩個都說好，必須給出一個明確的答案。`:''}
+
+用說故事的方式，把這次所有卦象串成一個完整的故事告訴問者。
+
+結構：
+第一段：「卦象讓我看到一幅畫面⋯⋯」——用畫面描述問者現在的整體處境，讓他/她讀完說「對，就是這樣」
+第二段：給出這次卦象最核心的一個傾向或方向，明確、不模糊
+最後兩句：
+第一句：「這個卦說：○○。」——一個明確的答案，不模糊，不說「這取決於你」。
+第二句：一句說進心裡的話，像老朋友最後說的那句話。
+
+語氣根據問題性質切換（感情用溫柔、事業用直接、人生用深遠）。
+不說大道理，不說套話，說的是只屬於這個人這個問題的話。`,
+      2000
+    );
+
+    return{spread,sr,drawn,yaoChanges,readings,synth};
+  }catch(e){
+    console.warn('fetchReadings failed:',e.message);
+    const h=randHex();
+    const fallbackYaoChanges=[{movingYaos:[],changedHex:null}];
+    return{
+      spread:SPREADS.single,
+      sr:'感應當下',
+      drawn:[h],
+      yaoChanges:fallbackYaoChanges,
+      readings:[`【圖像解析】\n${h.visual}\n\n【卦象深解】\n${h.name}卦，上${h.upper}、下${h.lower}，象徵「${h.nature}」。\n彖傳：${h.tuan}\n象傳：${h.image}\n\n【針對你的問題】\n${h.name}卦在此提示你：順應當下的能量，保持內心清明。\n・觀察自己目前真正的狀態\n・不必急於行動，先靜心感受\n・**此刻最重要的是誠實面對自己的處境**\n\n【具體行動建議】\n1. 靜心片刻，把問題完整寫下來，讓思緒更清晰。\n2. 以誠信之心待人處事，不強求結果。\n3. 保持耐心，時機成熟自然明朗。\n4. 回顧卦辭「${h.judgment}」，思考它對你的具體啟示。`],
+      synth:`${h.name}卦的智慧提醒我們：${h.nature}。順應天地之道，靜心觀察，方向自然清晰。`
+    };
+  }
+}
+
+function parseSection(raw,tag){
+  const m=raw.match(new RegExp(`【${tag}】\\s*([\\s\\S]*?)(?=【|$)`));
+  return m?m[1].trim():'';
+}
+
+function buildResult(data){
+  const{spread,sr,drawn,yaoChanges,readings,synth}=data;
+  let h='<div class="fade-in">';
+
+  // One-line anchor summary at very top (extracted from synth first line)
+  const synthLines=synth?synth.split('\n').filter(l=>l.trim()):[];
+  const anchor=synthLines.length>0?synthLines[0].slice(0,60)+(synthLines[0].length>60?'⋯⋯':''):'';
+  if(anchor){
+    h+=`<div class="result-anchor"><span class="anchor-icon">☯</span>${anchor}</div>`;
+  }
+
+  // Synthesis moved to TOP
+  if(synth){
+    h+=`<div class="synthesis synthesis-top">
+      <span class="synth-lbl">整體總結</span>
+      <div class="synth-txt">${synth.replace(/\n/g,'<br>')}</div>
+    </div>`;
+  }
+
+  h+=`<div class="spread-intro">
+    <div class="spread-badge">${spread.name}</div>
+    <div class="spread-desc-txt">${spread.desc}</div>
+    <div class="spread-reason">AI 選擇原因：${sr}</div>
+  </div>`;
+
+  h+='<div class="cards-grid">';
+  drawn.forEach((hx,i)=>{
+    const yc=yaoChanges?yaoChanges[i]:{movingYaos:[],changedHex:null};
+    const hasChange=yc&&yc.movingYaos.length>0&&yc.changedHex;
+    h+=`<div class="card-unit">
+      <div class="card-pos-label">${spread.slots[i]}</div>
+      <div class="card-img-frame">
+        <img src="${hx.id}.png" alt="${hx.name}卦" onerror="this.parentElement.style.display='none'">
+      </div>
+      <div class="card-name-row">
+        <span class="card-hex-id">第 ${hx.id} 卦</span>
+        <div class="card-hex-main">${hx.name}卦</div>
+        <div class="card-hex-tri">上${hx.upper}　下${hx.lower}</div>
+        <div class="card-hex-nat">${hx.nature}</div>
+        ${hasChange?`<div class="card-hex-change">↓ 變卦　第 ${yc.changedHex.id} 卦　${yc.changedHex.name}卦</div>`:'<div class="card-hex-pure">純卦・卦象穩定</div>'}
+      </div>
+    </div>`;
+  });
+  h+='</div>';
+
+  drawn.forEach((hx,i)=>{
+    const raw=readings[i]||'';
+    const yc=yaoChanges?yaoChanges[i]:{movingYaos:[],changedHex:null};
+    const hasChange=yc&&yc.movingYaos.length>0&&yc.changedHex;
+    const logicTxt=parseSection(raw,'解讀邏輯');
+    const seenTxt=parseSection(raw,'你看到的那個人');
+    const imgTxt=parseSection(raw,'圖像解析');
+    const deepTxt=parseSection(raw,'卦象深解');
+    const changeTxt=parseSection(raw,'走向')||parseSection(raw,'變卦走向');
+    const qTxt=parseSection(raw,'針對問者的處境')||parseSection(raw,'針對你的問題');
+    const decisionTxt=parseSection(raw,'這個卦說');
+    const actTxt=parseSection(raw,'可以做的事')||parseSection(raw,'具體行動建議');
+
+    h+=`<div class="card-reading">
+      <div class="cr-header">
+        <span class="cr-num">第 ${hx.id} 卦</span>
+        <span class="cr-name">${hx.fullname||hx.name+'卦'}</span>
+        <span class="cr-nature">${hx.nature}</span>
+        <span class="cr-pos">${spread.slots[i]}</span>
+      </div>`;
+    if(seenTxt){h+=`<div class="seen-block">${seenTxt.replace(/\n/g,'<br>')}</div>`;}
+
+    // Moving yaos display
+    if(hasChange){
+      h+=`<div class="moving-yaos-block">
+        <span class="my-label">動爻（天機所在）</span>
+        ${yc.movingYaos.map(yi=>`<div class="my-item">${hx.yaoci[yi]}</div>`).join('')}
+        <div class="my-arrow">↓ 變為第 ${yc.changedHex.id} 卦「${yc.changedHex.name}卦」　${yc.changedHex.nature}</div>
+      </div>`;
+    }
+
+    if(imgTxt){h+=`<div><span class="tag tg-img">卦象畫面</span></div><div class="rtext">${imgTxt.replace(/\n/g,'<br>')}</div>`;}
+    if(deepTxt){h+=`<div><span class="tag tg-plain">卦象解讀</span></div><div class="rtext">${deepTxt.replace(/\n/g,'<br>')}</div>`;}
+    if(hasChange&&changeTxt){h+=`<div><span class="tag tg-change">走向</span></div><div class="rtext">${changeTxt.replace(/\n/g,'<br>')}</div>`;}
+    if(qTxt){h+=`<div><span class="tag tg-advice">對你說的話</span></div><div class="rtext">${qTxt.replace(/\n/g,'<br>')}</div>`;}
+    if(decisionTxt){h+=`<div class="decision-block">${decisionTxt.replace(/\n/g,'<br>')}</div>`;}
+    if(actTxt){h+=`<div><span class="tag tg-advice">可以做的事</span></div><div class="rtext">${actTxt.replace(/\n/g,'<br>')}</div>`;}
+    h+=`<div style="margin-top:1.2rem;">
+      <span class="tag tg-classic">卦　辭</span>
+      <div class="rtext classic">${hx.judgment}</div>
+      <span class="tag tg-classic">象　傳</span>
+      <div class="rtext classic">${hx.image}</div>
+    </div></div>`;
+  });
+
+  // Follow-up question box
+  h+=`<div class="followup-wrap">
+    <div class="followup-box">
+      <span class="followup-lbl">還有疑問？</span>
+      <div class="followup-desc">針對這次解讀，可以繼續追問</div>
+      <textarea id="followupInput" class="followup-input" rows="2" placeholder="例如：我應該怎麼跟對方開口談？"></textarea>
+      <button class="followup-btn" onclick="submitFollowup()">送出追問</button>
+    </div>
+    <div class="followup-answer" id="followupAnswer" style="display:none;">
+      <span class="followup-ans-lbl">易經師回應</span>
+      <div class="followup-ans-txt" id="followupAnswerTxt"></div>
+    </div>
+  </div>`;
+
+  // Feedback box
+  h+=`<div class="feedback-wrap">
+    <div class="feedback-box" id="feedbackBox">
+      <span class="feedback-lbl">這次的占卜解讀</span>
+      <div class="feedback-q">符合你目前的狀況嗎？</div>
+      <div class="feedback-btns" id="fitBtns">
+        <button class="fb-btn" onclick="selectFb(this,'fit','非常符合')">非常符合</button>
+        <button class="fb-btn" onclick="selectFb(this,'fit','有些符合')">有些符合</button>
+        <button class="fb-btn" onclick="selectFb(this,'fit','不太符合')">不太符合</button>
+      </div>
+      <div class="feedback-q" style="margin-top:1.2rem;">對你有幫助嗎？</div>
+      <div class="feedback-btns" id="helpBtns">
+        <button class="fb-btn" onclick="selectFb(this,'help','很有幫助')">很有幫助</button>
+        <button class="fb-btn" onclick="selectFb(this,'help','有一點幫助')">有一點幫助</button>
+        <button class="fb-btn" onclick="selectFb(this,'help','幫助不大')">幫助不大</button>
+      </div>
+      <div class="feedback-comment-wrap" id="commentWrap" style="display:none;">
+        <textarea id="commentInput" class="feedback-comment" placeholder="還有什麼想說的？（選填）" rows="2"></textarea>
+        <button class="fb-submit" onclick="submitFeedback()">送出回饋</button>
+      </div>
+      <div class="feedback-thanks" id="feedbackThanks" style="display:none;">
+        <div class="thanks-text">🙏　謝謝你的回饋，願易經智慧持續陪伴你</div>
+      </div>
+    </div>
+  </div>`;
+
+  h+=`<button class="btn-again" onclick="goBack()">重新占卜</button></div>`;
+  document.getElementById('s3body').innerHTML=h;
+}
+
+/* ══ Reflect hint — 起卦前引導 ══ */
+function showReflect(val){
+  const hint=document.getElementById('reflectHint');
+  const txt=document.getElementById('reflectTxt');
+  if(!val||val.trim().length<10){hint.style.display='none';return;}
+
+  // Detect question type and show reflection prompt
+  let msg='';
+  if(/感情|愛情|男友|女友|男朋友|女朋友|喜歡|交往|分手|婚姻|結婚|另一半|伴侶/.test(val)){
+    msg='靜下來想一想——你最害怕的那個結果是什麼？';
+  }else if(/工作|換工作|職場|升職|離職|offer|創業|事業|老闆|同事/.test(val)){
+    msg='靜下來想一想——如果答案是「留下來」，你的第一個感受是什麼？';
+  }else if(/家人|父母|小孩|家庭|關係|朋友|衝突|矛盾/.test(val)){
+    msg='靜下來想一想——你真正希望這段關係變成什麼樣子？';
+  }else if(/錢|投資|買|賣|財務|貸款|創業資金/.test(val)){
+    msg='靜下來想一想——除了錢，你真正擔心的是什麼？';
+  }else{
+    msg='靜下來想一想——你問這個問題，真正想知道的是什麼？';
+  }
+  txt.textContent=msg;
+  hint.style.display='flex';
+}
+
+function goBack(){
+  forceGo=false;
+  show('s1');
+  document.getElementById('qIn').value='';
+  document.getElementById('clarifyHint').classList.remove('show');
+  document.getElementById('s3QuestionBar').style.display='none';
+  document.getElementById('s3body').innerHTML='';
+  selectedCardIds=[];
+  resData=null;
+  fbState={fit:'',help:''};
+  profileState={gender:'',age:'',duration:''};
+  document.querySelectorAll('.profile-btn').forEach(b=>b.classList.remove('on'));
+  window._isTwoChoice=false;
+  window._optA='';
+  window._optB='';
+  setMode('free');
+  if(document.getElementById('choiceA')) document.getElementById('choiceA').value='';
+  if(document.getElementById('choiceB')) document.getElementById('choiceB').value='';
+}
+
+/* ══ Follow-up ══ */
+async function submitFollowup(){
+  const q=document.getElementById('followupInput').value.trim();
+  if(!q) return;
+  const btn=document.querySelector('.followup-btn');
+  btn.textContent='解讀中⋯⋯';
+  btn.disabled=true;
+
+  const context=resData?`牌陣：${resData.spread.name}，各卦：${resData.drawn.map(h=>h.name+'卦').join('、')}`:'';
+  const ans=await callAI(
+    `使用者做完易經占卜後追問：「${q}」
+
+占卜背景：${context}
+
+請以易經占卜師的角色，針對這個追問給出具體、溫暖、有深度的回應。繁體中文，不需要重複解說卦象，直接回應問題。`,
+    1500
+  );
+
+  const ansDiv=document.getElementById('followupAnswer');
+  document.getElementById('followupAnswerTxt').innerHTML=
+    (ans||'此刻天機難以言說，建議靜心沉澱，答案往往在心中。').replace(/\n/g,'<br>');
+  ansDiv.style.display='block';
+  btn.textContent='再追問';
+  btn.disabled=false;
+  document.getElementById('followupInput').value='';
+}
+
+/* ══ Feedback ══ */
+let fbState={fit:'',help:''};
+function selectFb(btn,type,val){
+  const groupId=type==='fit'?'fitBtns':'helpBtns';
+  document.getElementById(groupId).querySelectorAll('.fb-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  fbState[type]=val;
+  if(fbState.fit&&fbState.help) document.getElementById('commentWrap').style.display='block';
+}
+function submitFeedback(){
+  document.getElementById('commentWrap').style.display='none';
+  document.querySelectorAll('#feedbackBox .feedback-q,#feedbackBox .feedback-btns,#feedbackBox .feedback-lbl')
+    .forEach(el=>el.style.display='none');
+  document.getElementById('feedbackThanks').style.display='block';
+}
+</script>
+</body>
+</html>
