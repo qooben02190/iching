@@ -1707,7 +1707,7 @@ async function callAI(prompt,maxT){
         "anthropic-version":"2023-06-01",
         "anthropic-dangerous-direct-browser-access":"true"
       },
-      body:JSON.stringify({model:maxT&&maxT<=1200?"claude-haiku-4-5-20251001":"claude-sonnet-4-20250514",max_tokens:maxT||2000,system:SYS,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:maxT||2000,system:SYS,messages:[{role:"user",content:prompt}]})
     });
     if(!r.ok){
       const errText=await r.text();
@@ -1746,8 +1746,9 @@ async function fetchReadingsWithCards(q, spread, sr, drawn, isTwoChoice=false){
     const yaoChanges=drawn.map(h=>genYaoChange(h));
     // readings 和 synth 同時計算（synth 只需要卦名，不需要 readings 內容）
     const readings=await Promise.all(drawn.map((h,i)=>{
-      const role=spread.slots[i];
-      const{movingYaos,changedHex}=yaoChanges[i];
+      const role=spread.slots[i]||`位置${i+1}`;
+      const yaoData=yaoChanges[i]||{movingYaos:[],changedHex:null};
+      const{movingYaos,changedHex}=yaoData;
       const hasChange=movingYaos.length>0&&changedHex;
       const movingYaoTexts=movingYaos.map(yi=>h.yaoci[yi]).join('、');
       const profileTxt=(profile.gender||profile.age||profile.duration)?
@@ -1836,15 +1837,16 @@ ${hasChange?`【走向】
 用一個完整的故事說現在→轉折→未來的走向，給出明確傾向。`:''}
 
 【這個卦說】
-這是整個解讀最核心的部分，必須做到以下三點：
-① 先給出明確的答案：「這個卦說：○○。」（方向清楚，不模糊，不說「這取決於你」）
-② 說出這個答案背後最重要的洞見——為什麼卦象這樣說？卦象看到了什麼讓你這樣判斷？用2-3句說清楚，像一個老師在解題，讓問者真正懂。
-③ 結尾一句讓人帶走的話——像朋友最後說的那一句，讓問者記住這個方向。
+這是整個解讀最核心的部分，必須完整做到：
+① 明確答案：「這個卦說：○○。」（方向清楚，不模糊，不說「這取決於你」）
+② 洞見展開（這是重點，不能敷衍）：
+   - 為什麼卦象這樣說？具體說出卦象裡的哪個元素、哪個畫面、哪個能量讓你這樣判斷
+   - 這個判斷對問者的具體情況意味著什麼？連結到他/她說的具體情境
+   - 如果問者照著這個方向走，接下來會發生什麼？給出時間感和畫面
+   - 如果不照這個方向走，會有什麼風險？
+③ 一句收尾的話，說進問者心裡，讓他/她帶著它離開。
 
-格式：
-「這個卦說：○○。」
-然後2-3句洞見說明。
-最後1句收尾。
+整個「這個卦說」段落不少於150字，讓問者真正感覺「這個解讀值得」。
 
 【可以做的事】
 3-4個具體行動，用「因為卦象說⋯⋯，所以你可以⋯⋯」的結構。
@@ -1867,7 +1869,7 @@ ${hasChange?`【爻變說明——必須包含】
 - 變卦代表「如果順著這個能量走，最終會到達的狀態」
 用故事方式說：「現在是⋯⋯（本卦），因為⋯⋯（動爻），所以會走向⋯⋯（變卦）」
 不要說「爻變表示⋯⋯」，要說「這個變化讓我看到⋯⋯」`:''}`,
-        2000
+        2500
       );
     }));
 
@@ -1922,11 +1924,13 @@ ${spread.name==='天時・地利・人和'?`
 「這個卦說：○○。」——一個明確的答案。然後一句說進心裡的話，像老朋友最後說的那句話。
 
 格式要求：
-- 不要只是段落文字，要有「・」帶出的重點
-- 每個重點不超過兩句
-- 結尾必須有「這個卦說：」的明確答句
-- 語氣根據問題性質切換，不說套話`,
-      1200
+- 開頭一句畫面感的描述，讓問者讀完說「對就是這樣」
+- 用「・」帶出的重點，每個重點2-3句充分說明，不是一句帶過
+- 重點之間要有連貫，說出這三個面向加起來告訴了問者什麼
+- 結尾「這個卦說：○○。」之後，再用2-3句說明為什麼這樣判斷，以及問者可以帶走的核心洞見
+- 語氣根據問題性質切換，感情溫柔、職場直接、人生哲學深遠
+- 整體字數不少於400字，讓問者感覺物超所值`,
+      2000
     );
 
     return{spread,sr,drawn,yaoChanges,readings,synth};
@@ -2153,8 +2157,9 @@ function buildResult(data){
   // 牌卡小圖放最上方
   h+='<div class="cards-grid">';
   drawn.forEach((hx,i)=>{
-    const yc=yaoChanges?yaoChanges[i]:{movingYaos:[],changedHex:null};
-    const hasChange=yc&&yc.movingYaos.length>0&&yc.changedHex;
+    if(!hx||!hx.id||!hx.name) return;
+    const yc=(yaoChanges&&yaoChanges[i])||{movingYaos:[],changedHex:null};
+    const hasChange=!!(yc&&yc.movingYaos&&yc.movingYaos.length>0&&yc.changedHex);
     h+=`<div class="card-unit">
       <div class="card-pos-label">${spread.slots[i]}</div>
       <div class="card-img-frame">
@@ -2189,9 +2194,14 @@ function buildResult(data){
   h+=`<div class="readings-wrap" style="--card-count:${cardCount}">`;
 
   drawn.forEach((hx,i)=>{
+    // 防禦：確保 hx 是有效的卦象物件
+    if(!hx||!hx.id||!hx.name){
+      console.warn('Invalid hex at index', i, hx);
+      return;
+    }
     const raw=readings[i]||'';
-    const yc=yaoChanges?yaoChanges[i]:{movingYaos:[],changedHex:null};
-    const hasChange=yc&&yc.movingYaos.length>0&&yc.changedHex;
+    const yc=(yaoChanges&&yaoChanges[i])||{movingYaos:[],changedHex:null};
+    const hasChange=!!(yc&&yc.movingYaos&&yc.movingYaos.length>0&&yc.changedHex);
     const logicTxt=parseSection(raw,'解讀邏輯');
     const seenTxt=parseSection(raw,'你看到的那個人');
     const imgTxt=parseSection(raw,'圖像解析');
