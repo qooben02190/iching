@@ -630,7 +630,7 @@ details[open] .cr-judgment-summary::after{content:'－';}
     </button>
     <div class="test-mode-wrap">
       <label class="test-mode-label">
-        <input type="checkbox" id="testModeToggle" onchange="toggleTestMode(this.checked)">
+        <input type="checkbox" id="testModeToggle" onchange="toggleTestMode(this.checked)" autocomplete="off">
         <span>測試模式（不需要 API Key）</span>
       </label>
     </div>
@@ -950,11 +950,16 @@ function changeApiKey(){
 
 // Init: load key if exists
 window.addEventListener('DOMContentLoaded',()=>{
+  // 確保測試模式預設關閉
+  testMode=false;
+  const cb=document.getElementById('testModeToggle');
+  if(cb) cb.checked=false;
+
   const key=loadApiKey();
   if(key){
     APIKEY=key;
     const badge=document.getElementById('keyBadge');
-    if(badge) badge.style.display='flex';
+    if(badge) badge.style.display='inline-block';
     const notSet=document.getElementById('keyNotSet');
     if(notSet) notSet.style.display='none';
   }
@@ -1201,6 +1206,7 @@ async function begin(q){
         window._optA=p.optionA||'';
         window._optB=p.optionB||'';
         newCount=2;
+        neededCount=2;  // 立即更新，不等後面的 if
         window._spreadKey='change';
         if(currentMode==='free'&&window._optA&&window._optB){
           setMode('two');
@@ -1384,14 +1390,17 @@ async function confirmCards(){
 
   if(drawn.length===0) return;
 
-  // If somehow we have fewer cards than needed, pad with random ones
+  // 確保張數正確（最多補到 neededCount）
+  const maxCards=window._isTwoChoice?2:neededCount;
   const used=new Set(drawn.map(h=>h.id));
-  while(drawn.length<neededCount){
+  while(drawn.length<maxCards){
     let h;
     do{ h=randHex(); }while(used.has(h.id));
     used.add(h.id);
     drawn.push(h);
   }
+  // 如果是二選一，強制截斷到 2 張
+  if(window._isTwoChoice) drawn.splice(2);
 
   show('s2b');
   animateSteps();
@@ -1624,7 +1633,7 @@ async function callAI(prompt,maxT){
     if(!text) throw new Error("Empty response from API");
     return text;
   }catch(e){
-    console.warn("AI call failed:",e.message);
+    console.error("AI call failed:",e.message, e);
     return "";
   }
 }
@@ -1839,36 +1848,24 @@ ${spread.name==='天時・地利・人和'?`
 
     return{spread,sr,drawn,yaoChanges,readings,synth};
   }catch(e){
-    console.warn('fetchReadingsWithCards failed:',e.message);
-    const h=drawn[0]||randHex();
+    console.error('fetchReadingsWithCards failed:',e.message);
+    // 顯示錯誤給用戶，方便除錯
+    const errMsg=e.message||'未知錯誤';
     return{
       spread,sr,drawn,
       yaoChanges:drawn.map(()=>({movingYaos:[],changedHex:null})),
-      readings:drawn.map(h=>`【你看到的那個人】
-卦象讓我看到一個正在尋找方向的人。
+      readings:drawn.map(()=>`【錯誤】
+API 呼叫失敗：${errMsg}
 
-【圖像解析】
-${h.visual}
+請確認：
+1. API Key 是否正確設定
+2. Anthropic 帳戶是否有信用額度
+3. 網路連線是否正常`),
+      synth:`⚠️ 解讀失敗
 
-【卦象深解】
-${h.name}卦象徵「${h.nature}」。
-卦辭：${h.judgment}
+錯誤訊息：${errMsg}
 
-【針對你的問題】
-此刻卦象提示你靜心觀察，順應自然之道。
-・保持誠信，不強求結果
-・靜待時機成熟
-**這個卦傾向讓你先靜下來，再行動。**
-
-【時間感】
-現在是蓄積期，一個月內先觀察。
-
-【具體行動建議】
-1. 因為卦象說此刻需要靜心，所以你可以花10分鐘寫下真正的想法。
-2. 因為卦象說誠信是關鍵，所以你可以跟最信任的人說出這件事。`),
-      synth:`${h.name}卦的智慧提醒我們順應當下。
-
-這個卦說：靜心，答案已在你心中。`
+請回首頁重試，或確認 API Key 設定是否正確。`
     };
   }
 }
@@ -2038,6 +2035,56 @@ function formatSynth(txt){
 function parseSection(raw,tag){
   const m=raw.match(new RegExp(`【${tag}】\\s*([\\s\\S]*?)(?=【|$)`));
   return m?m[1].trim():'';
+}
+
+function formatSynth(raw){
+  if(!raw) return '';
+  const lines=raw.split('\n');
+  let html='';
+  let inPoints=false;
+
+  lines.forEach(line=>{
+    const t=line.trim();
+    if(!t){html+='<br>';return;}
+
+    // 【標題】段落
+    if(t.startsWith('【')&&t.includes('】')){
+      if(inPoints){html+='</ul>';inPoints=false;}
+      const title=t.replace(/【([^】]+)】.*/,'$1');
+      const rest=t.replace(/【[^】]+】\s*/,'');
+      html+=`<div class="synth-section-title">${title}</div>`;
+      if(rest) html+=`<div class="synth-line">${rest}</div>`;
+      return;
+    }
+
+    // ・重點列
+    if(t.startsWith('・')||t.startsWith('•')){
+      if(!inPoints){html+='<ul class="synth-points">';inPoints=true;}
+      const txt=t.replace(/^[・•]\s*/,'');
+      // 分割「天時：說明」格式
+      const colonMatch=txt.match(/^([^：:]+)[：:](.+)/);
+      if(colonMatch){
+        html+=`<li><span class="synth-point-label">${colonMatch[1]}</span><span class="synth-point-body">${colonMatch[2].trim()}</span></li>`;
+      }else{
+        html+=`<li>${txt}</li>`;
+      }
+      return;
+    }
+
+    // 「這個卦說：」特別處理
+    if(t.includes('這個卦說：')||t.includes('這個卦說:')){
+      if(inPoints){html+='</ul>';inPoints=false;}
+      html+=`<div class="synth-verdict">${t}</div>`;
+      return;
+    }
+
+    // 一般行
+    if(inPoints){html+='</ul>';inPoints=false;}
+    html+=`<div class="synth-line">${t}</div>`;
+  });
+
+  if(inPoints) html+='</ul>';
+  return html;
 }
 
 function buildResult(data){
