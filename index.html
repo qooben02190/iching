@@ -1384,6 +1384,22 @@ async function callAI(prompt,maxT){
   }
 }
 
+/* ══ Yao Change (爻變) ══ */
+function genYaoChange(hex){
+  const moving=[];
+  for(let i=0;i<6;i++){if(Math.random()<0.25)moving.push(i);}
+  const movingYaos=moving.slice(0,3);
+  if(movingYaos.length===0) return{movingYaos:[],changedHex:null};
+  let newId=hex.id;
+  movingYaos.forEach(yi=>{
+    const shift=[1,2,4,8,16,32][yi];
+    newId=((newId-1+shift)%64)+1;
+  });
+  if(newId===hex.id) newId=(hex.id%64)+1;
+  const changedHex=HEX.find(h=>h.id===newId)||HEX[(newId-1)%64];
+  return{movingYaos,changedHex};
+}
+
 async function fetchReadingsWithCards(q, spread, sr, drawn, isTwoChoice=false){
   const profile=profileState||{};
   try{
@@ -1571,32 +1587,6 @@ async function fetchReadings(q, profile={}){
     // Draw cards with yao change (爻變) mechanism
     const drawn=[],used=new Set();
     for(let i=0;i<spread.slots.length;i++){let h;do{h=randHex();}while(used.has(h.id));used.add(h.id);drawn.push(h);}
-
-    // Generate yao changes for each card (1/4 probability per yao, traditional coin method)
-    function genYaoChange(hex){
-      // Each yao: random, 1/4 chance of being a moving yao (動爻)
-      const moving=[];
-      for(let i=0;i<6;i++){if(Math.random()<0.25)moving.push(i);}
-      // Limit to max 3 moving yaos for readability
-      const movingYaos=moving.slice(0,3);
-
-      if(movingYaos.length===0) return {movingYaos:[],changedHex:null};
-
-      // Calculate changed hexagram id by flipping moving yaos
-      // We use a simple mapping: XOR the yao pattern
-      // Each yao is yin(0) or yang(1), we derive from hex id
-      // Use hex id to get 6-bit binary pattern, flip moving yaos, find new hex
-      // Simplified: map to nearby hex with some offset logic
-      let newId=hex.id;
-      movingYaos.forEach(yi=>{
-        // Each moving yao shifts the hex id in a deterministic way
-        const shift=[1,2,4,8,16,32][yi];
-        newId=((newId-1+shift)%64)+1;
-      });
-      if(newId===hex.id) newId=(hex.id%64)+1; // ensure different hex
-      const changedHex=HEX.find(h=>h.id===newId)||HEX[(newId-1)%64];
-      return{movingYaos,changedHex};
-    }
 
     const yaoChanges=drawn.map(h=>genYaoChange(h));
 
@@ -1913,23 +1903,61 @@ async function submitFollowup(){
   btn.textContent='解讀中⋯⋯';
   btn.disabled=true;
 
-  const context=resData?`牌陣：${resData.spread.name}，各卦：${resData.drawn.map(h=>h.name+'卦').join('、')}`:'';
-  const ans=await callAI(
-    `使用者做完易經占卜後追問：「${q}」
+  const context=resData?`
+本次牌陣：${resData.spread.name}
+各卦：${resData.drawn.map((h,i)=>{
+  const yc=resData.yaoChanges?resData.yaoChanges[i]:null;
+  let txt=`${resData.spread.slots[i]}→${h.name}卦（${h.nature}）`;
+  if(yc&&yc.movingYaos.length>0&&yc.changedHex) txt+=`，動爻變為${yc.changedHex.name}卦`;
+  return txt;}).join('；')}
+原始問題：${currentQ||''}`:'' ;
 
-占卜背景：${context}
+  const judgeRaw=await callAI(
+    `使用者占卜後追問：「${q}」
 
-請以易經占卜師的角色，針對這個追問給出具體、溫暖、有深度的回應。繁體中文，不需要重複解說卦象，直接回應問題。`,
-    1500
+${context}
+
+請判斷這個追問是否在原卦範疇內可以回答。
+
+若可以用原卦回答（是原問題的延伸或細節）：
+{"canAnswer":true,"reply":"回答內容，300字以內，語氣溫暖，緊扣卦象，帶入具體時間點或畫面"}
+
+若需要重新起卦才能準確回答（是全新的問題，原卦無法涵蓋）：
+{"canAnswer":false,"reason":"一句話說明為何原卦無法回答","preview":"給問者一點方向感，讓他知道新卦大概會往哪個角度看"}
+
+只回覆JSON。`,
+    600
   );
 
+  let parsed={canAnswer:true,reply:''};
+  try{
+    parsed=JSON.parse(judgeRaw.replace(/```json|```/g,'').trim());
+  }catch(e){
+    parsed={canAnswer:true,reply:judgeRaw};
+  }
+
   const ansDiv=document.getElementById('followupAnswer');
-  document.getElementById('followupAnswerTxt').innerHTML=
-    (ans||'此刻天機難以言說，建議靜心沉澱，答案往往在心中。').replace(/\n/g,'<br>');
+  const ansTxt=document.getElementById('followupAnswerTxt');
+
+  if(parsed.canAnswer===false){
+    ansTxt.innerHTML=`
+      <div class="new-div-prompt">
+        <div class="ndp-reason">${parsed.reason||'這個問題需要重新起一個卦才能準確回答。'}</div>
+        ${parsed.preview?`<div class="ndp-preview">${parsed.preview}</div>`:''}
+        <button class="ndp-btn" onclick="alert('付費功能即將開放')">另起一卦，深入解讀　NT$100</button>
+      </div>`;
+  }else{
+    ansTxt.innerHTML=(parsed.reply||judgeRaw||'此刻天機難以言說，建議靜心沉澱。').replace(/\n/g,'<br>');
+  }
+
   ansDiv.style.display='block';
   btn.textContent='再追問';
   btn.disabled=false;
   document.getElementById('followupInput').value='';
+}
+
+function startNewDivination(q){
+  alert('付費功能即將開放，將以「'+q+'」重新起卦解讀。');
 }
 
 /* ══ Feedback ══ */
