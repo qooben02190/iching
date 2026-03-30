@@ -2008,30 +2008,6 @@ ${isTwoChoice?`
   }
 }
 
-function formatSynth(txt){
-  if(!txt) return '';
-  return txt.split('\n').map(line=>{
-    line=line.trim();
-    if(!line) return '<br>';
-    // ・開頭的行做成重點條
-    if(line.startsWith('・')||line.startsWith('・')){
-      const body=line.replace(/^[・・]/,'').trim();
-      return `<div class="synth-point"><span class="synth-dot">・</span><span>${body}</span></div>`;
-    }
-    // 【標題】行
-    if(line.startsWith('【')&&line.includes('】')){
-      const title=line.match(/【(.+?)】/)[1];
-      const rest=line.replace(/【.+?】/,'').trim();
-      return `<div class="synth-section-title">${title}</div>${rest?`<div class="synth-line">${rest}</div>`:''}`;
-    }
-    // 「這個卦說：」行
-    if(line.includes('這個卦說：')||line.includes('這個卦說:')){
-      return `<div class="synth-verdict">${line}</div>`;
-    }
-    return `<div class="synth-line">${line}</div>`;
-  }).join('');
-}
-
 function parseSection(raw,tag){
   const m=raw.match(new RegExp(`【${tag}】\\s*([\\s\\S]*?)(?=【|$)`));
   return m?m[1].trim():'';
