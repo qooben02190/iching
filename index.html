@@ -239,8 +239,12 @@ details[open] .cr-judgment-summary::after{content:'－';}
 /* Synthesis */
 .synthesis{background:rgba(139,115,64,.07);border:1px solid rgba(139,115,64,.2);padding:1.6rem 1.8rem;margin:2rem 0;}
 .synth-lbl{font-size:.66rem;letter-spacing:.32em;color:var(--gold);margin-bottom:.9rem;display:block;}
-.synth-txt{font-size:1rem;line-height:2.3;color:var(--ink);font-weight:300;}
-.synth-txt br+span[style]{margin-top:.2rem;display:inline-block;}
+.synth-txt{font-size:1rem;line-height:2;color:var(--ink);font-weight:300;}
+.synth-line{margin-bottom:.4rem;line-height:1.9;}
+.synth-point{display:flex;gap:.5rem;margin-bottom:.6rem;align-items:flex-start;line-height:1.9;}
+.synth-dot{color:var(--gold);flex-shrink:0;font-size:1rem;}
+.synth-section-title{font-size:.62rem;letter-spacing:.25em;color:var(--gold);margin:1rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid rgba(139,115,64,.2);}
+.synth-verdict{font-size:1.05rem;font-weight:700;color:var(--ink);margin-top:1.2rem;padding:1rem 1.2rem;background:rgba(26,22,20,.04);border-left:3px solid var(--ink);line-height:1.9;}
 .btn-again{display:block;margin:2.5rem auto 0;background:none;border:none;cursor:pointer;font-family:'Noto Serif TC',serif;font-size:.7rem;letter-spacing:.3em;color:var(--muted);padding:.45rem 1rem;border-bottom:1px solid rgba(107,96,88,.25);transition:all .22s;}
 .btn-again:hover{color:var(--ink);border-color:var(--ink);}
 .s2-inner{width:100%;max-width:100%;margin:0;padding:1.5rem 1rem 3rem;display:flex;flex-direction:column;align-items:center;box-sizing:border-box;}
@@ -1148,9 +1152,11 @@ function animateSteps(){
 async function begin(q){
   currentQ=q;
   selectedCardIds=[];
-  window._isTwoChoice=false;
-  window._optA='';
-  window._optB='';
+  // 只有在非二選一模式才重設（二選一由 beginTwoChoice 設定）
+  if(!window._isTwoChoice){
+    window._optA='';
+    window._optB='';
+  }
 
   // 先用本地邏輯預估牌數，讓問者可以馬上開始選牌
   let sk='timeline', sr='', count=3;
@@ -1434,8 +1440,7 @@ function beginTwoChoice(q, optA, optB){
   window._isTwoChoice=true;
   show('s2');
   initCardGrid();
-  document.getElementById('s2NeedCount').textContent=2;
-  document.getElementById('s2Sub').innerHTML=`請選擇 <span class="s2-count">2</span> 張牌`;
+  updateS2Header(2, 'change', true);
   const hint=document.querySelector('.s2-hint');
   if(hint) hint.textContent=`第一張代表「${optA}」，第二張代表「${optB}」`;
 }
@@ -2006,6 +2011,30 @@ ${isTwoChoice?`
   }
 }
 
+function formatSynth(txt){
+  if(!txt) return '';
+  return txt.split('\n').map(line=>{
+    line=line.trim();
+    if(!line) return '<br>';
+    // ・開頭的行做成重點條
+    if(line.startsWith('・')||line.startsWith('・')){
+      const body=line.replace(/^[・・]/,'').trim();
+      return `<div class="synth-point"><span class="synth-dot">・</span><span>${body}</span></div>`;
+    }
+    // 【標題】行
+    if(line.startsWith('【')&&line.includes('】')){
+      const title=line.match(/【(.+?)】/)[1];
+      const rest=line.replace(/【.+?】/,'').trim();
+      return `<div class="synth-section-title">${title}</div>${rest?`<div class="synth-line">${rest}</div>`:''}`;
+    }
+    // 「這個卦說：」行
+    if(line.includes('這個卦說：')||line.includes('這個卦說:')){
+      return `<div class="synth-verdict">${line}</div>`;
+    }
+    return `<div class="synth-line">${line}</div>`;
+  }).join('');
+}
+
 function parseSection(raw,tag){
   const m=raw.match(new RegExp(`【${tag}】\\s*([\\s\\S]*?)(?=【|$)`));
   return m?m[1].trim():'';
@@ -2026,7 +2055,7 @@ function buildResult(data){
   if(synth){
     h+=`<div class="synthesis synthesis-top">
       <span class="synth-lbl">整體總結</span>
-      <div class="synth-txt">${synth.replace(/\n/g,'<br>').replace(/・/g,'<span style="color:var(--gold)">・</span>')}</div>
+      <div class="synth-txt">${formatSynth(synth)}</div>
     </div>`;
   }
 
