@@ -237,37 +237,30 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 .s2-count{color:var(--red);font-weight:700;}
 .s2-hint{font-size:.68rem;letter-spacing:.1em;color:rgba(107,96,88,.5);font-style:italic;line-height:1.8;}
 .cards-select-grid{
-  display:grid;
-  grid-template-columns:repeat(8,1fr);
-  gap:6px;
+  position:relative;
   width:100%;
-  margin-bottom:1.5rem;
-  padding:0 .2rem;
-}
-@media(min-width:480px){
-  .cards-select-grid{grid-template-columns:repeat(12,1fr);gap:5px;}
-}
-@media(min-width:700px){
-  .cards-select-grid{grid-template-columns:repeat(16,1fr);gap:5px;}
+  height:240px;
+  margin-bottom:2rem;
+  flex-shrink:0;
 }
 .card-select-item{
-  aspect-ratio:2/3;
+  position:absolute;
+  width:44px;
+  height:66px;
   cursor:pointer;
-  position:relative;
   border-radius:3px;
   perspective:600px;
-  transition:transform .2s ease, box-shadow .2s;
+  transform-origin:bottom center;
+  transition:transform .3s cubic-bezier(.23,1,.32,1);
   -webkit-tap-highlight-color:transparent;
   touch-action:manipulation;
   user-select:none;
 }
-.card-select-item:active:not(.selected){
-  transform:scale(.94);
-}
 .card-select-item.selected{
-  transform:translateY(-6px) scale(1.06);
-  box-shadow:0 6px 18px rgba(192,57,43,.35);
-  z-index:5;
+  z-index:30 !important;
+}
+@media(min-width:480px){
+  .card-select-item{width:52px;height:78px;}
 }
 .card-flip-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.23,1,.32,1);}
 .card-select-item.flipped .card-flip-inner{transform:rotateY(180deg);}
@@ -418,7 +411,7 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
   .s2-sub{font-size:.75rem;}
   .s2-hint{font-size:.62rem;}
   .cards-select-grid{height:200px;margin-bottom:1.5rem;}
-  .card-select-item{width:38px;height:58px;}
+
   .s2-confirm-btn{font-size:.72rem;padding:.7rem 2rem;width:100%;}
 
   /* Waiting animation */
@@ -497,7 +490,7 @@ textarea::placeholder{color:rgba(107,96,88,.38);font-style:italic;letter-spacing
 @media(max-width:360px){
   .logo{font-size:2rem;}
   .cards-select-grid{height:170px;}
-  .card-select-item{width:32px;height:50px;}
+
   .cr-card-img,.cr-card-img-placeholder{width:60px;height:90px;min-width:60px;}
 }
 .card-hex-pure{font-size:.62rem;letter-spacing:.12em;color:var(--muted);margin-top:.3rem;opacity:.7;}
@@ -1222,43 +1215,49 @@ function guessSpread(q){
 function initCardGrid(){
   const grid=document.getElementById('cardsSelectGrid');
   if(!grid) return;
-  const ids=[...Array(64)].map((_,i)=>i+1).sort(()=>Math.random()-.5).slice(0,32);
-  const total=ids.length;
-  const cardW=46;
-  const cardH=70;
 
-  // Rainbow arc: all cards pivot from a single point far below
-  // This creates a true semicircular fan like a deck of cards held in hand
-  const gridW=grid.getBoundingClientRect().width||window.innerWidth||375;
-  
+  const isMobile=window.innerWidth<480;
+  const TOTAL=isMobile?24:32;
+  const CARD_W=isMobile?44:52;
+  const CARD_H=isMobile?66:78;
+  const RADIUS=isMobile?200:260;   // 弧形半徑（越大越平）
+  const SPAN=isMobile?70:80;       // 扇形總角度
+  const GRID_H=isMobile?240:260;
 
-  grid.innerHTML=ids.map((id,idx)=>{
+  grid.style.height=GRID_H+'px';
+
+  const ids=[...Array(64)].map((_,i)=>i+1).sort(()=>Math.random()-.5).slice(0,TOTAL);
+  const W=grid.offsetWidth||window.innerWidth||375;
+  const PIVOT_X=W/2;
+  const PIVOT_Y=GRID_H+RADIUS*0.7; // 樞紐在格子下方很遠處，造成彩虹弧
+
+  grid.innerHTML=ids.map((id,i)=>{
     const hex=HEX.find(h=>h.id===id);
     const name=hex?hex.name:'';
     const fullname=hex?(hex.fullname||name+'卦'):name+'卦';
 
-    // Angle from -arcSpan/2 to +arcSpan/2
-    const angle=-arcSpan/2 + (idx/(total-1))*arcSpan;
-    const rad=angle*(Math.PI/180);
+    const frac=TOTAL>1?i/(TOTAL-1):0.5;
+    const angleDeg=-SPAN/2+frac*SPAN;
+    const angleRad=angleDeg*Math.PI/180;
 
-    // Card center position on the arc
-    const cx=gridW/2 + Math.sin(rad)*radius;
-    const cy=pivotY - Math.cos(rad)*radius;
+    // 卡片中心在弧上的位置
+    const cx=PIVOT_X+Math.sin(angleRad)*RADIUS;
+    const cy=PIVOT_Y-Math.cos(angleRad)*RADIUS;
 
-    const left=cx - cardW/2;
-    const top=cy - cardH/2;
+    const left=Math.round(cx-CARD_W/2);
+    const top=Math.round(cy-CARD_H/2);
 
-    const style=`left:${left}px;top:${top}px;transform:rotate(${angle}deg);z-index:${idx};`;
-
-    return `<div class="card-select-item" id="csi-${id}" onclick="selectCard(${id})"
-      data-angle="${angle}" data-cx="${cx}" data-cy="${cy}" style="${style}">
+    return `<div class="card-select-item" id="csi-${id}"
+      data-id="${id}" data-angle="${angleDeg.toFixed(2)}"
+      style="left:${left}px;top:${top}px;transform:rotate(${angleDeg.toFixed(1)}deg);z-index:${i};"
+      onclick="selectCard(${id})">
       <div class="card-flip-inner">
         <div class="card-select-back">
           <img src="card-back.jpg" alt="牌背" onerror="this.parentElement.style.background='#8b1a1a'">
         </div>
-        <div class="card-select-front-wrap" id="rev-${id}">
+        <div class="card-select-front-wrap">
           <img class="card-select-front" src="${id}.png" alt="${fullname}"
-            onerror="this.parentElement.style.background='var(--ink)';this.style.display='none'">
+            onerror="this.parentElement.style.background='#2a2018';this.style.display='none'">
         </div>
       </div>
     </div>`;
@@ -1275,23 +1274,29 @@ function selectCard(id, el){
     return;
   }
 
-  // Already at max
   if(selectedCardIds.length>=neededCount){
     el.classList.add('shake');
     setTimeout(()=>el.classList.remove('shake'),400);
     return;
   }
 
-  // Prevent double-click immediately
+  // Prevent double tap
   el.style.pointerEvents='none';
-
   selectedCardIds.push(id);
   el.classList.add('selected','flipped');
 
-  setTimeout(()=>{ el.style.pointerEvents='auto'; },700);
+  // 沿著旋轉方向往上抬起
+  const angle=parseFloat(el.dataset.angle)||0;
+  const rad=angle*Math.PI/180;
+  const liftX=(Math.sin(rad)*-28).toFixed(1);
+  const liftY=(Math.cos(rad)*-28).toFixed(1);
+  el.style.transform=`translate(${liftX}px,${liftY}px) rotate(${(angle*0.2).toFixed(1)}deg) scale(1.1)`;
+  el.style.zIndex=200+selectedCardIds.length;
 
+  setTimeout(()=>{ el.style.pointerEvents='auto'; },600);
   updateSelectionUI();
 }
+
 
 function updateSelectionUI(){
   const btn=document.getElementById('s2ConfirmBtn');
